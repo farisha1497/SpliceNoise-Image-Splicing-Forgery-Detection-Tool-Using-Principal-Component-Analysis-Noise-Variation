@@ -2,11 +2,18 @@ function process_image(input_image_path, output_dir)
     % Note: We remove the addpath command as paths are handled during compilation
     try
         % Read the input image
-        spliced = imread(input_image_path);
+        original = imread(input_image_path);
         
-        % Save original image directly from input (no preprocessing)
+        % Convert to grayscale if color image
+        if size(original, 3) > 1
+            spliced = rgb2gray(original);
+        else
+            spliced = original;
+        end
+        
+        % Save original image directly from input
         original_path = fullfile(output_dir, 'original.png');
-        copyfile(input_image_path, original_path);
+        imwrite(original, original_path);
         
         % Get image dimensions and preprocess for analysis
         [M, N] = size(spliced);
@@ -34,11 +41,6 @@ function process_image(input_image_path, output_dir)
         valid = find(label64==0);
         re = ones(numel(label64),1);
         
-        % First method (original) - we'll calculate but not save the figure
-        [u, re2] = KMeans(Noise_64(valid),2);
-        re(valid) = re2(:,2);
-        result = (reshape(re,size(Noise_64)));
-        
         % Second method (proposed) - this is our final result
         attenfactor = model(meanIb);
         Noise_64c = Noise_64.*attenfactor;
@@ -46,29 +48,55 @@ function process_image(input_image_path, output_dir)
         re(valid) = re3(:,2);
         result_proposed = (reshape(re,size(Noise_64c)));
         
-        % Create figure only for the final method - with single image
+        % Create figure for final result with red highlights
         h2 = figure('Visible', 'off');
-        % Get the current figure size
-        set(h2, 'Position', [100, 100, N, M]); % Set figure size to match image
         
-        % Create a single detection result
-        imagesc(I);
-        colormap(gray);
-        hold on;
+        % Set figure size to match image dimensions
+        set(h2, 'Position', [100, 100, N, M]);
         
-        % Overlay detection result in red
-        detected = result_proposed' == 2;
-        red_mask = cat(3, ones(size(I)), zeros(size(I)), zeros(size(I)));
-        h = imagesc(red_mask);
-        set(h, 'AlphaData', 0.3 * detected); % Semi-transparent red for detected regions
+        % Create the detection result
+        result_img = uint8(zeros(M, N, 3));
         
-        % Remove axes for cleaner look
-        axis off;
-        axis equal;
+        % Convert grayscale to RGB
+        for c = 1:3
+            result_img(:,:,c) = uint8(I);
+        end
+        
+        % Highlight detected regions in red
+        for i = 1:size(result_proposed, 1)
+            for j = 1:size(result_proposed, 2)
+                if result_proposed(i,j) == 2
+                    % Block coordinates
+                    row_start = (i-1)*B + 1;
+                    row_end = min(i*B, M);
+                    col_start = (j-1)*B + 1;
+                    col_end = min(j*B, N);
+                    
+                    % Make block reddish
+                    block = result_img(row_start:row_end, col_start:col_end, :);
+                    block(:,:,1) = min(255, double(block(:,:,1)) + 100); % Increase red
+                    block(:,:,2) = max(0, double(block(:,:,2)) - 50);    % Decrease green
+                    block(:,:,3) = max(0, double(block(:,:,3)) - 50);    % Decrease blue
+                    result_img(row_start:row_end, col_start:col_end, :) = block;
+                    
+                    % Add red border
+                    thickness = 2;
+                    result_img(row_start:row_start+thickness-1, col_start:col_end, 1) = 255;
+                    result_img(row_end-thickness+1:row_end, col_start:col_end, 1) = 255;
+                    result_img(row_start:row_end, col_start:col_start+thickness-1, 1) = 255;
+                    result_img(row_start:row_end, col_end-thickness+1:col_end, 1) = 255;
+                    
+                    result_img(row_start:row_start+thickness-1, col_start:col_end, 2:3) = 0;
+                    result_img(row_end-thickness+1:row_end, col_start:col_end, 2:3) = 0;
+                    result_img(row_start:row_end, col_start:col_start+thickness-1, 2:3) = 0;
+                    result_img(row_start:row_end, col_end-thickness+1:col_end, 2:3) = 0;
+                end
+            end
+        end
         
         % Save the result
         final_result_path = fullfile(output_dir, 'final_result.png');
-        saveas(h2, final_result_path);
+        imwrite(result_img, final_result_path);
         close(h2);
         
         % Determine if image is spliced
