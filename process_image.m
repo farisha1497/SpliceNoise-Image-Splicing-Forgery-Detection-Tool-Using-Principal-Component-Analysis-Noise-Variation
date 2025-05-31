@@ -46,9 +46,27 @@ function process_image(input_image_path, output_dir)
         re(valid) = re3(:,2);
         result_proposed = (reshape(re,size(Noise_64c)));
         
-        % Create figure only for the final method
+        % Create figure only for the final method - with single image
         h2 = figure('Visible', 'off');
-        dethighlightHZ(I,B,result_proposed');
+        % Get the current figure size
+        set(h2, 'Position', [100, 100, N, M]); % Set figure size to match image
+        
+        % Create a single detection result
+        imagesc(I);
+        colormap(gray);
+        hold on;
+        
+        % Overlay detection result in red
+        detected = result_proposed' == 2;
+        red_mask = cat(3, ones(size(I)), zeros(size(I)), zeros(size(I)));
+        h = imagesc(red_mask);
+        set(h, 'AlphaData', 0.3 * detected); % Semi-transparent red for detected regions
+        
+        % Remove axes for cleaner look
+        axis off;
+        axis equal;
+        
+        % Save the result
         final_result_path = fullfile(output_dir, 'final_result.png');
         saveas(h2, final_result_path);
         close(h2);
