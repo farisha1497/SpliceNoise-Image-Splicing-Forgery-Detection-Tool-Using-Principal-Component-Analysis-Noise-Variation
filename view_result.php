@@ -44,7 +44,7 @@ $results = json_decode(file_get_contents($results_file), true);
         }
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             margin-top: 20px;
         }
@@ -57,6 +57,12 @@ $results = json_decode(file_get_contents($results_file), true);
             padding: 15px;
             background-color: <?php echo $results['is_spliced'] ? '#ffebee' : '#e8f5e9'; ?>;
             border-radius: 5px;
+        }
+        .image-container {
+            text-align: center;
+        }
+        .image-container h3 {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -82,17 +88,13 @@ $results = json_decode(file_get_contents($results_file), true);
         </div>
         
         <div class="results-grid">
-            <div>
+            <div class="image-container">
                 <h3>Original Image</h3>
                 <img class="result-image" src="<?php echo $results_dir . '/' . $results['original_image']; ?>" alt="Original Image">
             </div>
-            <div>
-                <h3>First Method Result</h3>
-                <img class="result-image" src="<?php echo $results_dir . '/' . $results['result1_image']; ?>" alt="First Method Result">
-            </div>
-            <div>
-                <h3>Second Method Result (Proposed)</h3>
-                <img class="result-image" src="<?php echo $results_dir . '/' . $results['result2_image']; ?>" alt="Second Method Result">
+            <div class="image-container">
+                <h3>Detection Result</h3>
+                <img class="result-image" src="<?php echo $results_dir . '/' . $results['final_result_image']; ?>" alt="Detection Result">
             </div>
         </div>
     </div>

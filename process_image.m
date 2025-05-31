@@ -4,7 +4,11 @@ function process_image(input_image_path, output_dir)
         % Read the input image
         spliced = imread(input_image_path);
         
-        % Get image dimensions
+        % Save original image directly from input (no preprocessing)
+        original_path = fullfile(output_dir, 'original.png');
+        copyfile(input_image_path, original_path);
+        
+        % Get image dimensions and preprocess for analysis
         [M, N] = size(spliced);
         
         % Convert to double
@@ -16,10 +20,6 @@ function process_image(input_image_path, output_dir)
         % Ensure dimensions are multiples of block size
         I = I(1:floor(M/B)*B,1:floor(N/B)*B);
         [M, N] = size(I);
-        
-        % Save original image
-        original_path = fullfile(output_dir, 'original.png');
-        imwrite(uint8(I), original_path);
         
         % Process blocks
         for i = 1 : M/B
@@ -34,30 +34,23 @@ function process_image(input_image_path, output_dir)
         valid = find(label64==0);
         re = ones(numel(label64),1);
         
-        % First method (original)
+        % First method (original) - we'll calculate but not save the figure
         [u, re2] = KMeans(Noise_64(valid),2);
         re(valid) = re2(:,2);
         result = (reshape(re,size(Noise_64)));
         
-        % Create figure for first method
-        h1 = figure('Visible', 'off');
-        dethighlightHZ(I,B,result');
-        result1_path = fullfile(output_dir, 'result1.png');
-        saveas(h1, result1_path);
-        close(h1);
-        
-        % Second method (proposed)
+        % Second method (proposed) - this is our final result
         attenfactor = model(meanIb);
         Noise_64c = Noise_64.*attenfactor;
         [u3, re3] = KMeans(Noise_64c(valid),2);
         re(valid) = re3(:,2);
         result_proposed = (reshape(re,size(Noise_64c)));
         
-        % Create figure for second method
+        % Create figure only for the final method
         h2 = figure('Visible', 'off');
         dethighlightHZ(I,B,result_proposed');
-        result2_path = fullfile(output_dir, 'result2.png');
-        saveas(h2, result2_path);
+        final_result_path = fullfile(output_dir, 'final_result.png');
+        saveas(h2, final_result_path);
         close(h2);
         
         % Determine if image is spliced
@@ -69,8 +62,7 @@ function process_image(input_image_path, output_dir)
         result_info.is_spliced = is_spliced;
         result_info.timestamp = datestr(now);
         result_info.original_image = 'original.png';
-        result_info.result1_image = 'result1.png';
-        result_info.result2_image = 'result2.png';
+        result_info.final_result_image = 'final_result.png';
         
         % Save results to JSON file manually since jsonencode is more widely available
         results_json = fullfile(output_dir, 'analysis_results.json');
