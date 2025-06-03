@@ -1,4 +1,14 @@
 <?php
+session_start();
+
+// Check if the user is logged in
+if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
+    header("location: login.php");
+    exit;
+}
+
+require_once "config/database.php";
+
 // Configuration
 $mcr_path = 'C:/Program Files/MATLAB/MATLAB Runtime/R2024b/runtime/win64'; // Update this path to your MCR installation
 $matlab_exe = 'C:/xampp/htdocs/Exposing-splicing-sensor-noise-master2/process_image.exe'; // Using absolute path to the executable
@@ -62,6 +72,21 @@ if ($_FILES["image"]["error"] == UPLOAD_ERR_OK) {
         $results_json = $result_folder . '/analysis_results.json';
         if (!file_exists($results_json)) {
             throw new Exception("Analysis results not generated");
+        }
+        
+        // Read the results
+        $results_data = json_decode(file_get_contents($results_json), true);
+        
+        // Store results in database
+        $sql = "INSERT INTO analysis_results (user_id, result_folder, is_spliced) VALUES (?, ?, ?)";
+        if($stmt = mysqli_prepare($conn, $sql)){
+            mysqli_stmt_bind_param($stmt, "isi", $_SESSION["id"], $timestamp, $results_data["is_spliced"]);
+            
+            if(!mysqli_stmt_execute($stmt)){
+                throw new Exception("Error saving results to database: " . mysqli_error($conn));
+            }
+            
+            mysqli_stmt_close($stmt);
         }
         
         // Success - redirect to results page
