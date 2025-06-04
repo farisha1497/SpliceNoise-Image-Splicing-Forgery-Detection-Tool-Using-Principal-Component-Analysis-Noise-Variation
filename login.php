@@ -329,7 +329,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     <div class="container">
         <h2>Welcome Back!</h2>
-        <p style="color: var(--gray-blue); margin-bottom: 2rem; text-align: center; font-size: 0.95rem;">Please enter your credentials to continue.</p>
+        <p style="color: var(--gray-blue); margin-bottom: 2rem; text-align: center; font-size: 0.95rem; font-weight: 600;">Please enter your credentials to continue.</p>
 
         <?php 
         if(!empty($login_err)){

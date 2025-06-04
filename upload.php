@@ -30,6 +30,13 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             --soft-white: #F7FCFD;
             --gray-blue: #657F87;
             
+            /* Dark Mode Colors */
+            --dark-bg: #1A1D2D;
+            --dark-surface: #242838;
+            --dark-surface-light: #2E324A;
+            --dark-text: #E8E9F3;
+            --dark-text-muted: #B4B6C5;
+            
             /* Neutral Colors */
             --white: #FFFFFF;
             --light-gray: #F0F0F0;
@@ -45,8 +52,8 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
         body {
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
-            color: var(--charcoal);
-            background: linear-gradient(135deg, var(--teal-light) 0%, var(--soft-white) 100%);
+            color: var(--dark-text);
+            background: var(--dark-bg);
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -60,9 +67,9 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 20%, rgba(0, 109, 119, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(131, 197, 190, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(72, 181, 181, 0.03) 0%, transparent 60%);
+                radial-gradient(circle at 20% 20%, rgba(59, 153, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(74, 80, 123, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.05) 0%, transparent 60%);
             z-index: -1;
         }
 
@@ -125,40 +132,44 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
         }
 
         .container {
-            max-width: 800px;
-            margin: 4rem auto;
-            padding: 2rem;
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 1rem;
         }
 
         .upload-container {
             background: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(107, 173, 166, 0.1);
             padding: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
         .user-info {
-            margin-bottom: 2rem;
+            margin-bottom: 1.2rem;
             text-align: center;
         }
 
         .user-info h3 {
             color: var(--teal-dark);
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             margin-bottom: 0.5rem;
         }
 
         .user-info p {
             color: var(--gray-blue);
-            font-size: 0.95rem;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .upload-form {
             text-align: center;
-            padding: 2rem;
-            border: 2px dashed var(--teal-medium);
+            padding: 2.5rem;
+            border: 1px dashed var(--teal-medium);
             border-radius: 10px;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
             transition: all 0.3s ease;
         }
 
@@ -174,12 +185,12 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
         .btn {
             background: linear-gradient(45deg, var(--teal-dark), var(--teal-accent));
             color: var(--white);
-            padding: 0.8rem 2rem;
+            padding: 0.6rem 1.5rem;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
         }
@@ -213,16 +224,17 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
         .action-buttons {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
         }
 
         .action-btn {
             text-decoration: none;
             color: var(--teal-dark);
-            padding: 0.8rem 2rem;
+            padding: 0.6rem 1.5rem;
             border-radius: 50px;
             font-weight: 500;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             background: var(--teal-light);
         }

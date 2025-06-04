@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 if (!isset($_GET['folder'])) {
     header('Location: view_results.php');
     exit();
@@ -38,6 +40,13 @@ $results = json_decode(file_get_contents($results_file), true);
             --soft-white: #F7FCFD;
             --gray-blue: #657F87;
             
+            /* Dark Mode Colors */
+            --dark-bg: #1A1D2D;
+            --dark-surface: #242838;
+            --dark-surface-light: #2E324A;
+            --dark-text: #E8E9F3;
+            --dark-text-muted: #B4B6C5;
+            
             /* Neutral Colors */
             --white: #FFFFFF;
             --light-gray: #F0F0F0;
@@ -53,8 +62,8 @@ $results = json_decode(file_get_contents($results_file), true);
         body {
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
-            color: var(--charcoal);
-            background: linear-gradient(135deg, var(--teal-light) 0%, var(--soft-white) 100%);
+            color: var(--dark-text);
+            background: var(--dark-bg);
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -68,9 +77,9 @@ $results = json_decode(file_get_contents($results_file), true);
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 20%, rgba(0, 109, 119, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(131, 197, 190, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(72, 181, 181, 0.03) 0%, transparent 60%);
+                radial-gradient(circle at 20% 20%, rgba(59, 153, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(74, 80, 123, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.05) 0%, transparent 60%);
             z-index: -1;
         }
 
@@ -133,31 +142,35 @@ $results = json_decode(file_get_contents($results_file), true);
         }
 
         .container {
-            max-width: 1000px;
-            margin: 4rem auto;
-            padding: 2rem;
+            max-width: 1100px;
+            margin: 1rem auto;
+            padding: 0.8rem;
         }
 
         .results-container {
             background: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(107, 173, 166, 0.1);
+            padding: 1.2rem;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
         .action-buttons {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
         }
 
         .action-btn {
             text-decoration: none;
             color: var(--teal-dark);
-            padding: 0.8rem 2rem;
+            padding: 0.6rem 1.5rem;
             border-radius: 50px;
             font-weight: 500;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             background: var(--teal-light);
         }
@@ -174,9 +187,28 @@ $results = json_decode(file_get_contents($results_file), true);
 
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 1rem;
+            max-width: 100%;
+            align-items: stretch;
+        }
+
+        .image-container {
+            text-align: center;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(107, 173, 166, 0.1);
+        }
+
+        .image-container h3 {
+            color: var(--teal-dark);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
         }
 
         .result-image {
@@ -184,34 +216,32 @@ $results = json_decode(file_get_contents($results_file), true);
             height: auto;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            object-fit: contain;
         }
 
         .conclusion {
-            margin: 2rem 0;
-            padding: 1.5rem;
+            margin: 1rem 0;
+            padding: 1rem;
             border-radius: 8px;
             background-color: <?php echo $results['is_spliced'] ? 'rgba(220, 53, 69, 0.1)' : 'rgba(40, 167, 69, 0.1)'; ?>;
         }
 
         .conclusion h3 {
             color: <?php echo $results['is_spliced'] ? '#dc3545' : '#28a745'; ?>;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
+            font-size: 1.1rem;
         }
 
-        .image-container {
-            text-align: center;
-        }
-
-        .image-container h3 {
-            color: var(--teal-dark);
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
+        .conclusion p {
+            font-size: 0.9rem;
+            color: var(--gray-blue);
         }
 
         .timestamp {
             color: var(--teal-dark);
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
             font-weight: 600;
             text-align: center;
         }
@@ -235,6 +265,105 @@ $results = json_decode(file_get_contents($results_file), true);
         .logout-btn:hover {
             background-color: rgba(255, 255, 255, 0.1);
             border-color: var(--white);
+        }
+
+        .disclaimer {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--dark-surface-light);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--dark-text-muted);
+            line-height: 1.7;
+        }
+
+        .important-alert {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+        }
+
+        .important-alert h4 {
+            color: #dc3545;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .important-alert p {
+            color: var(--dark-text);
+            margin-bottom: 0 !important;
+        }
+
+        .disclaimer h3 {
+            color: var(--dark-text);
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .disclaimer p {
+            margin-bottom: 0.8rem;
+        }
+
+        .disclaimer a {
+            color: var(--teal-medium);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .disclaimer a:hover {
+            color: var(--teal-light);
+        }
+
+        .important-note-container {
+            background: var(--dark-surface-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            min-height: 500px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .important-note-container h3 {
+            color: #ff4d4d;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .important-note-container p {
+            color: var(--dark-text);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 1024px) {
+            .results-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .important-note-container {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            .important-note-container {
+                grid-column: span 1;
+            }
         }
     </style>
 </head>
@@ -272,6 +401,21 @@ $results = json_decode(file_get_contents($results_file), true);
                     <h3>Detection Result</h3>
                     <img class="result-image" src="<?php echo $results_dir . '/' . $results['final_result_image']; ?>" alt="Detection Result">
                 </div>
+                <div class="important-note-container">
+                    <h3>⚠️ Important Note</h3>
+                    <p>• This tool is specifically designed to detect image splicing based on inconsistencies in sensor noise levels caused by different ISO settings.</p><br>
+                    <p>• Detection results may not be accurate for spliced images that do not have distinct ISO settings between the source images.</p>
+                </div>
+            </div>
+
+            <div class="disclaimer">
+                <h3>About This Tool</h3>
+                <p>> <i>SpliceNoise</i> is based on the research paper "Exposing Image splicing with inconsistent sensor noise levels" (accepted by Multimedia Tools and Applications, 2020).</p>
+                <p>> The implementation focuses on ISO variations in image splicing detection.</p>
+                <p>> The tool employs a noise-based image splicing localization method specifically designed for cases where source images have distinct ISO settings.</p>
+                <p>> For more information, please visit:</p>
+                <p>• Paper: <a href="https://link.springer.com/article/10.1007/s11042-020-09280-z" target="_blank">https://link.springer.com/article/10.1007/s11042-020-09280-z</a></p>
+                <p>• Author: Hui Zeng & Anjie Peng & Xiaodan Lin</p>
             </div>
         </div>
     </div>

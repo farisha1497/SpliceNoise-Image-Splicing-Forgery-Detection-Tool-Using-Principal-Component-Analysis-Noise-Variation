@@ -64,10 +64,24 @@ session_start();
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 20%, rgba(59, 153, 153, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(74, 80, 123, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.05) 0%, transparent 60%);
+                radial-gradient(circle at 15% 15%, rgba(59, 153, 153, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 85% 85%, rgba(74, 80, 123, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(26, 29, 45, 0.97) 0%, rgba(45, 50, 88, 0.97) 100%);
             z-index: -1;
+            animation: gradientShift 20s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .header {
@@ -139,15 +153,29 @@ session_start();
         h1 {
             font-size: 4.5rem;
             margin-bottom: 2rem;
-            background: linear-gradient(45deg, var(--teal-medium), var(--indigo-light));
+            background: linear-gradient(
+                45deg,
+                var(--teal-light) 0%,
+                var(--teal-medium) 25%,
+                var(--white) 50%,
+                var(--teal-medium) 75%,
+                var(--teal-light) 100%
+            );
+            background-size: 200% auto;
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             line-height: 1.2;
             letter-spacing: 1px;
-            font-weight: 700;
-            animation: fadeInDown 0.8s ease-out;
-            text-shadow: 0 2px 10px rgba(107, 173, 166, 0.2);
+            font-weight: 600;
+            animation: shine 8s linear infinite;
+            text-shadow: 0 4px 12px rgba(107, 173, 166, 0.15);
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
         }
 
         .description {
@@ -164,13 +192,11 @@ session_start();
 
         .tagline {
             font-style: italic;
-            color: var(--teal-medium);
-            margin: 2rem 0;
-            font-size: 1.4rem;
+            color: var(--teal-light);
+            margin-bottom: 3rem;
+            font-size: 1.2rem;
+            font-weight: 400;
             opacity: 0.9;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            animation: fadeIn 0.8s ease-out 0.4s both;
         }
 
         .btn {
@@ -526,6 +552,31 @@ session_start();
         .auth-btn {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .main-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(
+                circle at center,
+                rgba(59, 153, 153, 0.03) 0%,
+                transparent 50%
+            );
+            animation: rotate 30s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
@@ -539,9 +590,9 @@ session_start();
         <a href="upload.php" class="btn btn-primary">Upload Image</a>
         <div class="dots">
             <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+            <span class="dot active"></span>
+            <span class="dot active"></span>
+            <span class="dot active"></span>
         </div>
     </div>
 </body>

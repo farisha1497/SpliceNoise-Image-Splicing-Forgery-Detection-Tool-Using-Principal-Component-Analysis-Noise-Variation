@@ -50,6 +50,13 @@ if($stmt = mysqli_prepare($conn, $sql)){
             --soft-white: #F7FCFD;
             --gray-blue: #657F87;
             
+            /* Dark Mode Colors */
+            --dark-bg: #1A1D2D;
+            --dark-surface: #242838;
+            --dark-surface-light: #2E324A;
+            --dark-text: #E8E9F3;
+            --dark-text-muted: #B4B6C5;
+            
             /* Neutral Colors */
             --white: #FFFFFF;
             --light-gray: #F0F0F0;
@@ -65,8 +72,8 @@ if($stmt = mysqli_prepare($conn, $sql)){
         body {
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
-            color: var(--charcoal);
-            background: linear-gradient(135deg, var(--teal-light) 0%, var(--soft-white) 100%);
+            color: var(--dark-text);
+            background: var(--dark-bg);
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -80,9 +87,9 @@ if($stmt = mysqli_prepare($conn, $sql)){
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 20%, rgba(0, 109, 119, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(131, 197, 190, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(72, 181, 181, 0.03) 0%, transparent 60%);
+                radial-gradient(circle at 20% 20%, rgba(59, 153, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(74, 80, 123, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.05) 0%, transparent 60%);
             z-index: -1;
         }
 
@@ -145,48 +152,52 @@ if($stmt = mysqli_prepare($conn, $sql)){
         }
 
         .container {
-            max-width: 800px;
-            margin: 4rem auto;
-            padding: 2rem;
+            max-width: 1100px;
+            margin: 1rem auto;
+            padding: 0.8rem;
         }
 
         .results-container {
             background: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(107, 173, 166, 0.1);
+            padding: 1.2rem;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
         .user-info {
-            margin-bottom: 2rem;
+            margin-bottom: 0.8rem;
             text-align: center;
         }
 
         .user-info h3 {
             color: var(--teal-dark);
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
         }
 
         .user-info p {
             color: var(--gray-blue);
-            font-size: 0.95rem;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .result-list {
             list-style: none;
             padding: 0;
-            max-width: 600px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
         .result-list li {
             background: var(--white);
             border-radius: 8px;
-            padding: 1.2rem;
-            margin-bottom: 1rem;
+            padding: 0.6rem;
+            margin-bottom: 0.6rem;
             transition: all 0.3s ease;
-            border: 2px solid var(--teal-light);
+            border: 1px solid var(--teal-light);
             position: relative;
         }
 
@@ -216,9 +227,8 @@ if($stmt = mysqli_prepare($conn, $sql)){
         }
 
         .result-list li p {
-            margin-bottom: 0.6rem;
-            color: var(--gray-blue);
-            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
         }
 
         .result-list li p:first-child {
@@ -228,17 +238,8 @@ if($stmt = mysqli_prepare($conn, $sql)){
         }
 
         .result-list li a {
-            color: var(--teal-bright);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            display: inline-block;
-            padding: 0.4rem 0;
-            font-size: 0.95rem;
-        }
-
-        .result-list li a:hover {
-            color: var(--teal-dark);
+            font-size: 0.9rem;
+            padding: 0.3rem 0;
         }
 
         .user-email {
@@ -282,16 +283,17 @@ if($stmt = mysqli_prepare($conn, $sql)){
         .action-buttons {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
         }
 
         .action-btn {
             text-decoration: none;
             color: var(--teal-dark);
-            padding: 0.8rem 2rem;
+            padding: 0.6rem 1.5rem;
             border-radius: 50px;
             font-weight: 500;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             background: var(--teal-light);
         }
@@ -319,7 +321,7 @@ if($stmt = mysqli_prepare($conn, $sql)){
 
             <div class="user-info">
                 <h3>Your Analysis History</h3>
-                <p>Total analyses: <?php echo count($results); ?></p>
+                <p>Total Analyses: <?php echo count($results); ?></p>
             </div>
 
             <?php if(empty($results)): ?>

@@ -104,6 +104,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             --soft-white: #F7FCFD;
             --gray-blue: #657F87;
             
+            /* Dark Mode Colors */
+            --dark-bg: #1A1D2D;
+            --dark-surface: #242838;
+            --dark-surface-light: #2E324A;
+            --dark-text: #E8E9F3;
+            --dark-text-muted: #B4B6C5;
+            
             /* Neutral Colors */
             --white: #FFFFFF;
             --light-gray: #F0F0F0;
@@ -120,7 +127,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: var(--charcoal);
-            background: linear-gradient(135deg, var(--teal-light) 0%, var(--soft-white) 100%);
+            background: var(--dark-bg);
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -134,9 +141,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 20%, rgba(0, 109, 119, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(131, 197, 190, 0.05) 0%, transparent 40%);
+                radial-gradient(circle at 20% 20%, rgba(59, 153, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(74, 80, 123, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.05) 0%, transparent 60%);
             z-index: -1;
+        }
+
+        .header {
+            background: var(--dark-surface);
+            border-bottom: 1px solid rgba(107, 173, 166, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .container {
@@ -202,7 +216,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         .form-group input {
             width: 100%;
             padding: 0.65rem 0.8rem;
-            border: 2px solid var(--teal-light);
+            border: 2px solid var(--teal-medium);
             border-radius: 6px;
             font-size: 0.9rem;
             transition: all 0.3s ease;
@@ -318,7 +332,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     <div class="container">
         <h2>Create Account</h2>
-        <p style="color: var(--gray-blue); margin-bottom: 2rem; text-align: center; font-size: 0.95rem;">Join SpliceNoise to start analyzing images.</p>
+        <p style="color: var(--gray-blue); margin-bottom: 2rem; text-align: center; font-size: 0.95rem; font-weight: 600;">Join SpliceNoise to start analyzing images.</p>
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
             <div class="form-group">
                 <label>Email</label>
