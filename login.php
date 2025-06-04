@@ -77,23 +77,30 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Primary Colors */
-            --teal-dark: #006D77;
-            --teal-medium: #83C5BE;
-            --teal-light: #EDF6F9;
-            --charcoal: #333333;
-            --teal-accent: #48B5B5;
+            /* Primary Colors - Darker Teal Palette */
+            --teal-dark: #005761;
+            --teal-medium: #6BADA6;
+            --teal-light: #E5F2F5;
+            --charcoal: #2A2A2A;
+            --teal-accent: #3B9999;
             
             /* Secondary Colors */
-            --teal-deep: #004E57;
-            --teal-bright: #00A5B5;
-            --soft-white: #FAFEFF;
-            --gray-blue: #7A97A0;
+            --teal-deep: #003F47;
+            --teal-bright: #008999;
+            --soft-white: #F7FCFD;
+            --gray-blue: #657F87;
+            
+            /* Dark Mode Colors */
+            --dark-bg: #1A1D2D;
+            --dark-surface: #242838;
+            --dark-surface-light: #2E324A;
+            --dark-text: #E8E9F3;
+            --dark-text-muted: #B4B6C5;
             
             /* Neutral Colors */
             --white: #FFFFFF;
-            --light-gray: #F5F5F5;
-            --silver: #C0C0C0;
+            --light-gray: #F0F0F0;
+            --silver: #B8B8B8;
         }
 
         * {
@@ -106,202 +113,223 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: var(--charcoal);
-            background: linear-gradient(135deg, var(--teal-light) 0%, var(--soft-white) 100%);
+            background: var(--dark-bg);
             min-height: 100vh;
-        }
-
-        .header {
-            background: linear-gradient(to right, var(--teal-dark), var(--teal-accent));
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 2px 10px rgba(0, 109, 119, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--white);
-            text-decoration: none;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-link {
-            text-decoration: none;
-            color: var(--teal-light);
-            font-weight: 500;
-            transition: all 0.3s ease;
             position: relative;
+            overflow-x: hidden;
         }
 
-        .nav-link::after {
+        body::before {
             content: '';
             position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -4px;
+            top: 0;
             left: 0;
-            background-color: var(--white);
-            transition: width 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: var(--white);
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(59, 153, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(74, 80, 123, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.05) 0%, transparent 60%);
+            z-index: -1;
         }
 
         .container {
-            max-width: 500px;
-            margin: 2rem auto;
+            max-width: 360px;
+            margin: 3rem auto;
             padding: 2rem;
             background: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 
+                0 10px 30px rgba(0, 87, 97, 0.15),
+                0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(107, 173, 166, 0.1);
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--teal-dark), var(--teal-accent));
+        }
+
+        .container:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 15px 35px rgba(0, 87, 97, 0.2),
+                0 3px 6px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
-            color: var(--teal-dark);
-            margin-bottom: 1rem;
-            font-size: 2rem;
+            color: var(--teal-deep);
+            margin-bottom: 0.75rem;
+            font-size: 1.8rem;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            color: var(--charcoal);
+            opacity: 0.85;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: var(--teal-deep);
+            margin-bottom: 0.3rem;
+            color: var(--charcoal);
             font-weight: 500;
+            font-size: 0.85rem;
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.8rem;
-            border: 2px solid var(--teal-light);
+            padding: 0.65rem 0.8rem;
+            border: 2px solid var(--teal-medium);
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
+            background: var(--soft-white);
+            color: var(--charcoal);
+            height: 38px;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: var(--teal-accent);
-            box-shadow: 0 0 0 3px rgba(72, 181, 181, 0.1);
+            box-shadow: 0 0 0 3px rgba(59, 153, 153, 0.1);
+            background: var(--white);
+        }
+
+        .form-group input::placeholder {
+            color: var(--gray-blue);
+            opacity: 0.8;
         }
 
         .btn {
-            background: linear-gradient(45deg, var(--teal-dark), var(--teal-accent));
+            background: var(--teal-dark);
             color: var(--white);
-            padding: 0.8rem 2rem;
+            padding: 0.6rem 1.5rem;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             width: 100%;
             font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            height: 38px;
+            box-shadow: 0 2px 4px rgba(0, 87, 97, 0.2);
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 109, 119, 0.2);
+            background: var(--teal-medium);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 87, 97, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 87, 97, 0.2);
         }
 
         .error {
-            color: #dc3545;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+            color: #c82333;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            padding: 0.3rem;
+            border-radius: 4px;
+            background-color: rgba(200, 35, 51, 0.1);
+            font-weight: 500;
         }
 
         .register-link {
-            margin-top: 1.5rem;
+            margin-top: 1rem;
             text-align: center;
-            color: var(--gray-blue);
+            color: var(--charcoal);
+            font-size: 0.85rem;
         }
 
         .register-link a {
-            color: var(--teal-bright);
+            color: var(--teal-dark);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
             transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .register-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--teal-bright);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
 
         .register-link a:hover {
+            color: var(--teal-deep);
+        }
+
+        .register-link a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin: -0.25rem 0 0.75rem;
+        }
+
+        .forgot-password a {
+            color: var(--teal-bright);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .forgot-password a:hover {
             color: var(--teal-dark);
         }
 
         @media (max-width: 768px) {
             .container {
-                margin: 1rem;
-                padding: 1.5rem;
+                margin: 1.5rem 1rem;
+                padding: 1.75rem;
+                max-width: 340px;
             }
 
-            .header {
-                padding: 1rem;
-            }
-
-            .nav-buttons {
-                gap: 1rem;
+            h2 {
+                font-size: 1.6rem;
             }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <a href="index.php" class="logo">SpliceNoise</a>
-            <div class="nav-buttons">
-                <a href="index.php" class="nav-link">Home</a>
-                <a href="guide.php" class="nav-link">Guide</a>
-                <?php if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true): ?>
-                <div class="user-menu">
-                    <span class="user-email"><?php echo htmlspecialchars($_SESSION["email"]); ?></span>
-                    <div class="account-icon" onclick="toggleMenu()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        <div class="account-menu" id="accountMenu">
-                            <a href="profile.php" class="menu-item">Profile</a>
-                            <a href="settings.php" class="menu-item">Settings</a>
-                            <a href="logout.php" class="menu-item logout">Logout</a>
-                        </div>
-                    </div>
-                </div>
-                <?php else: ?>
-                <div class="auth-buttons">
-                    <a href="login.php" class="auth-btn login-btn">Login</a>
-                    <a href="register.php" class="auth-btn register-btn">Register</a>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </header>
+    <?php include 'includes/header.php'; ?>
 
     <div class="container">
-        <h2>Welcome Back</h2>
-        <p style="color: var(--gray-blue); margin-bottom: 2rem;">Please enter your credentials to continue.</p>
+        <h2>Welcome Back!</h2>
+        <p style="color: var(--gray-blue); margin-bottom: 2rem; text-align: center; font-size: 0.95rem;">Please enter your credentials to continue.</p>
 
         <?php 
         if(!empty($login_err)){
@@ -319,6 +347,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 <label>Password</label>
                 <input type="password" name="password" placeholder="Enter your password">
                 <span class="error"><?php echo $password_err; ?></span>
+            </div>
+            <div class="forgot-password">
+                <a href="forgot-password.php">Forgot Password?</a>
             </div>
             <div class="form-group">
                 <input type="submit" class="btn" value="Login">
