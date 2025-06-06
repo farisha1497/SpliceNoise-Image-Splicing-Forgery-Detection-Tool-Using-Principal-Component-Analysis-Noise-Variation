@@ -44,10 +44,10 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         .header {
-            background: linear-gradient(to right, var(--teal-dark), var(--teal-accent));
+            background: linear-gradient(to right, #b44fd0, #7b4b82);
             padding: 1rem 2rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 2px 10px rgba(0, 109, 119, 0.1);
+            box-shadow: 0 4px 20px rgba(90, 42, 106, 0.3);
         }
 
         .header-content {
@@ -75,7 +75,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
         .nav-link {
             text-decoration: none;
-            color: var(--teal-light);
+            color: var(--white);
             font-weight: 500;
             transition: all 0.3s ease;
             position: relative;
@@ -94,11 +94,7 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         .nav-link:hover {
-            color: var(--white);
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
+            color: #ede0f5;
         }
 
         .auth-buttons {
@@ -124,8 +120,8 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         .register-btn {
-            background-color: var(--teal-light);
-            color: var(--teal-dark);
+            background-color: #ede0f5;
+            color: #5A2A6A;
             border: none;
         }
 
@@ -134,12 +130,13 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         .login-btn:hover {
-            border-color: var(--teal-light);
-            background-color: rgba(237, 246, 249, 0.1);
+            border-color: #ede0f5;
+            background-color: rgba(237, 224, 245, 0.1);
         }
 
         .register-btn:hover {
             background-color: var(--white);
+            color: #5A2A6A;
         }
 
         .user-email {

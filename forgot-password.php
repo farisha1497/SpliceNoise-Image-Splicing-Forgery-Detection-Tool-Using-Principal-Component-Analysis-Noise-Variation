@@ -119,17 +119,57 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: var(--charcoal);
-            background: linear-gradient(135deg, var(--teal-light) 0%, var(--soft-white) 100%);
+            background: #0B1437;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(59, 153, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(74, 80, 123, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(107, 173, 166, 0.05) 0%, transparent 60%);
+            z-index: -1;
         }
 
         .container {
-            max-width: 400px;
-            margin: 4rem auto;
+            max-width: 500px;
+            margin: 3rem auto;
             padding: 2rem;
             background: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 
+                0 10px 30px rgba(0, 87, 97, 0.15),
+                0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(107, 173, 166, 0.1);
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--teal-dark), var(--teal-accent));
+        }
+
+        .container:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 15px 35px rgba(0, 87, 97, 0.2),
+                0 3px 6px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
@@ -140,55 +180,77 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: var(--teal-deep);
+            margin-bottom: 0.3rem;
+            color: var(--charcoal);
             font-weight: 500;
+            font-size: 0.85rem;
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.8rem;
-            border: 2px solid var(--teal-light);
+            padding: 0.65rem 0.8rem;
+            border: 2px solid var(--teal-medium);
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
+            background: var(--soft-white);
+            color: var(--charcoal);
+            height: 38px;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: var(--teal-accent);
-            box-shadow: 0 0 0 3px rgba(72, 181, 181, 0.1);
+            box-shadow: 0 0 0 3px rgba(59, 153, 153, 0.1);
+            background: var(--white);
+        }
+
+        .form-group input::placeholder {
+            color: var(--gray-blue);
+            opacity: 0.8;
         }
 
         .btn {
-            background: linear-gradient(45deg, var(--teal-dark), var(--teal-accent));
+            background: var(--teal-dark);
             color: var(--white);
-            padding: 0.8rem 2rem;
+            padding: 0.6rem 1.5rem;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             width: 100%;
             font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            height: 38px;
+            box-shadow: 0 2px 4px rgba(0, 87, 97, 0.2);
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 109, 119, 0.2);
+            background: var(--teal-medium);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 87, 97, 0.3);
         }
 
         .error {
-            color: #dc3545;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+            color: #c82333;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            padding: 0.3rem;
+            border-radius: 4px;
+            background-color: rgba(200, 35, 51, 0.1);
+            font-weight: 500;
         }
 
         .success {
@@ -202,20 +264,38 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         .login-link {
-            margin-top: 1.5rem;
+            margin-top: 1rem;
             text-align: center;
-            color: var(--gray-blue);
+            color: var(--charcoal);
+            font-size: 0.85rem;
         }
 
         .login-link a {
-            color: var(--teal-bright);
+            color: var(--teal-dark);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
             transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .login-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--teal-bright);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
 
         .login-link a:hover {
-            color: var(--teal-dark);
+            color: var(--teal-deep);
+        }
+
+        .login-link a:hover::after {
+            transform: scaleX(1);
         }
     </style>
 </head>

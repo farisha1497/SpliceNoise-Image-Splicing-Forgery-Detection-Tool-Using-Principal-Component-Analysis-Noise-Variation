@@ -127,7 +127,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: var(--charcoal);
-            background: var(--dark-bg);
+            background: #0B1437;
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -154,7 +154,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         .container {
-            max-width: 360px;
+            max-width: 500px;
             margin: 3rem auto;
             padding: 2rem;
             background: var(--white);

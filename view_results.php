@@ -73,7 +73,7 @@ if($stmt = mysqli_prepare($conn, $sql)){
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: var(--dark-text);
-            background: var(--dark-bg);
+            background: #0B1437;
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;

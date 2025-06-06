@@ -15,6 +15,20 @@ session_start();
     </style>
 </head>
 <body>
+    <div class="background-shapes">
+        <div class="shape-1"></div>
+        <div class="shape-2"></div>
+        <div class="shape-3"></div>
+    </div>
+    <div class="grid-pattern"></div>
+    <div class="glow-dots">
+        <div class="glow-dot"></div>
+        <div class="glow-dot"></div>
+        <div class="glow-dot"></div>
+        <div class="glow-dot"></div>
+        <div class="glow-dot"></div>
+    </div>
+    
     <?php include 'includes/header.php'; ?>
 
     <div class="main-content">

@@ -113,7 +113,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: var(--charcoal);
-            background: var(--dark-bg);
+            background: #0B1437;
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -134,7 +134,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         .container {
-            max-width: 360px;
+            max-width: 500px;
             margin: 3rem auto;
             padding: 2rem;
             background: var(--white);
@@ -219,11 +219,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         .btn {
-            background: var(--teal-dark);
+            background: linear-gradient(45deg, var(--teal-dark), var(--teal-accent));
             color: var(--white);
-            padding: 0.6rem 1.5rem;
+            padding: 0.8rem 2rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 50px;
             cursor: pointer;
             font-weight: 600;
             font-size: 0.9rem;
@@ -234,19 +234,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             letter-spacing: 0.5px;
             position: relative;
             overflow: hidden;
-            height: 38px;
-            box-shadow: 0 2px 4px rgba(0, 87, 97, 0.2);
+            height: 45px;
+            box-shadow: 0 4px 15px rgba(0, 109, 119, 0.2);
         }
 
         .btn:hover {
-            background: var(--teal-medium);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 87, 97, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 109, 119, 0.3);
+            background: linear-gradient(45deg, var(--teal-accent), var(--teal-dark));
         }
 
         .btn:active {
             transform: translateY(1px);
-            box-shadow: 0 2px 4px rgba(0, 87, 97, 0.2);
+            box-shadow: 0 2px 10px rgba(0, 109, 119, 0.2);
         }
 
         .error {
