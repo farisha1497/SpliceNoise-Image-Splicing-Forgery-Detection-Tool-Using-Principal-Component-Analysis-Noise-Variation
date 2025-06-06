@@ -43,17 +43,23 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         
                         if(mysqli_stmt_execute($update_stmt)){
                             // Send reset email
-                            $reset_link = "http://" . $_SERVER['HTTP_HOST'] . "/reset-password.php?token=" . $reset_token . "&email=" . urlencode($email);
+                            $reset_link = "http://" . $_SERVER['HTTP_HOST'] . "/Exposing-splicing-sensor-noise-master2/reset-password.php?token=" . $reset_token . "&email=" . urlencode($email);
+                            
                             $to = $email;
-                            $subject = "Password Reset Request";
-                            $message = "Hello,\n\nYou have requested to reset your password. Click the link below to reset your password:\n\n";
+                            $subject = "Password Reset Request - SpliceNoise";
+                            $message = "We received a request to reset your password for your SpliceNoise account.\n\n";
+                            $message .= "To reset your password, click the link below or copy and paste it into your browser:\n\n";
                             $message .= $reset_link . "\n\n";
-                            $message .= "This link will expire in 1 hour.\n\n";
-                            $message .= "If you did not request this reset, please ignore this email.\n\n";
-                            $message .= "Best regards,\nSpliceNoise Team";
+                            $message .= "For security reasons, this link will expire in 1 hour.\n\n";
+                            $message .= "If you did not request this password reset, please ignore this email and your password will remain unchanged.\n\n";
+                            $message .= "For your security:\n";
+                            $message .= "- Never share your password with anyone\n";
+                            $message .= "- Create a strong, unique password\n";
+                            $message .= "- Enable two-factor authentication if available\n\n";
+                            $message .= "Best regards,\nThe SpliceNoise Team";
 
                             if(sendEmail($to, $subject, $message)){
-                                $success_msg = "Password reset instructions have been sent to your email.";
+                                $success_msg = "Password reset instructions have been sent to your email. Please check your inbox and spam folder.";
                             } else {
                                 $email_err = "Error sending reset email. Please try again later.";
                             }
