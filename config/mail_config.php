@@ -10,12 +10,12 @@ function sendEmail($to, $subject, $text_message, $html_message = '') {
 
     try {
         // Server settings
-        $mail->SMTPDebug = SMTP::DEBUG_SERVER;
+        $mail->SMTPDebug = SMTP::DEBUG_OFF; // Turn off debug output
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         $mail->Username   = 'farisha1497@gmail.com';
-        $mail->Password   = 'fxva faho wjeg zgne';
+        $mail->Password   = 'vpgllfcuodrusiqw';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port       = 465;
         $mail->CharSet    = 'UTF-8';
@@ -62,7 +62,10 @@ function sendEmail($to, $subject, $text_message, $html_message = '') {
         $mail->send();
         return true;
     } catch (Exception $e) {
-        error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        // Log the error with detailed information but don't expose it to the user
+        error_log("Mail Error: Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        error_log("Attempted to send to: {$to}");
+        error_log("Subject: {$subject}");
         return false;
     }
 }

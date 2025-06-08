@@ -330,7 +330,7 @@ if($stmt = mysqli_prepare($conn, $sql)){
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
-
+    
     <div class="container">
         <div class="results-container">
             <div class="action-buttons">
@@ -348,7 +348,7 @@ if($stmt = mysqli_prepare($conn, $sql)){
                     <p>No analysis results found. <a href="upload.php">Upload an image</a> to get started.</p>
                 </div>
             <?php else: ?>
-                <ul class="result-list">
+        <ul class="result-list">
                     <?php foreach ($results as $result): ?>
                         <li class="<?php echo $result['is_spliced'] ? 'spliced' : ''; ?>">
                             <p>Analysis from: <?php echo $result['timestamp']; ?></p>
@@ -360,14 +360,14 @@ if($stmt = mysqli_prepare($conn, $sql)){
                                     <strong style="color: #28a745;">No Splicing Detected</strong>
                                 <?php endif; ?>
                             </p>
-                            <p>
+                    <p>
                                 <a href="view_result.php?folder=<?php echo urlencode($result['result_folder']); ?>">
                                     View Detailed Result
-                                </a>
-                            </p>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                        </a>
+                    </p>
+                </li>
+            <?php endforeach; ?>
+        </ul>
             <?php endif; ?>
         </div>
     </div>

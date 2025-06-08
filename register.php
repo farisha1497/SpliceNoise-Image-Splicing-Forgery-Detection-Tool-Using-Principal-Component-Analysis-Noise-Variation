@@ -42,10 +42,21 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     // Validate password
     if(empty(trim($_POST["password"]))){
         $password_err = "Please enter a password.";     
-    } elseif(strlen(trim($_POST["password"])) < 6){
-        $password_err = "Password must have at least 6 characters.";
-    } else{
+    } else {
         $password = trim($_POST["password"]);
+        $uppercase = preg_match('/[A-Z]/', $password);
+        $lowercase = preg_match('/[a-z]/', $password);
+        $number    = preg_match('/[0-9]/', $password);
+        $symbol    = preg_match('/[!@#$%^&*]/', $password);
+        
+        if(!$uppercase || !$lowercase || !$number || !$symbol || strlen($password) < 12) {
+            $password_err = "Password must contain:";
+            if(!$uppercase) $password_err .= "<br>• At least 1 uppercase letter";
+            if(!$lowercase) $password_err .= "<br>• At least 1 lowercase letter";
+            if(!$number) $password_err .= "<br>• At least 1 number";
+            if(!$symbol) $password_err .= "<br>• At least 1 symbol (!@#$%^&*)";
+            if(strlen($password) < 12) $password_err .= "<br>• At least 12 characters";
+        }
     }
     
     // Validate confirm password
@@ -201,13 +212,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             position: relative;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.25rem;
             color: var(--charcoal);
             font-weight: 500;
             font-size: 0.85rem;
@@ -215,7 +226,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
         .form-group input {
             width: 100%;
-            padding: 0.65rem 0.8rem;
+            padding: 0.5rem 0.75rem;
             border: 2px solid var(--teal-medium);
             border-radius: 6px;
             font-size: 0.9rem;
@@ -223,7 +234,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             font-family: 'Poppins', sans-serif;
             background: var(--soft-white);
             color: var(--charcoal);
-            height: 38px;
+            height: 36px;
         }
 
         .form-group input:focus {
@@ -272,11 +283,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         .error {
             color: #c82333;
             font-size: 0.8rem;
-            margin-top: 0.3rem;
-            padding: 0.3rem;
+            margin-top: 0.25rem;
+            padding: 0.4rem;
             border-radius: 4px;
             background-color: rgba(200, 35, 51, 0.1);
             font-weight: 500;
+            line-height: 1.4;
         }
 
         .login-link {
@@ -314,6 +326,46 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             transform: scaleX(1);
         }
 
+        .password-requirements {
+            
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin: 0.4rem 0 1rem 0;
+            font-size: 0.8rem;
+            color: var(--charcoal);
+        }
+
+        .password-requirements h4 {
+            color: var(--charcoal);
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        .password-requirements ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .password-requirements li {
+            margin: 0.15rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            line-height: 1.2;
+        }
+
+        .password-requirements li::before {
+            content: '×';
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .password-requirements li.valid::before {
+            content: '✓';
+            color: #28a745;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 1.5rem 1rem;
@@ -341,13 +393,23 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             </div>    
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" placeholder="Choose a password">
+                <input type="password" name="password" id="password" placeholder="Enter your password">
                 <span class="error"><?php echo $password_err; ?></span>
             </div>
             <div class="form-group">
                 <label>Confirm Password</label>
                 <input type="password" name="confirm_password" placeholder="Confirm your password">
                 <span class="error"><?php echo $confirm_password_err; ?></span>
+            </div>
+            <div class="password-requirements">
+                <h4>Password Requirements:</h4>
+                <ul>
+                    <li id="uppercase">At least 1 uppercase letter (A-Z)</li>
+                    <li id="lowercase">At least 1 lowercase letter (a-z)</li>
+                    <li id="number">At least 1 digit (0-9)</li>
+                    <li id="symbol">At least 1 symbol (!@#$%^&*)</li>
+                    <li id="length">At least 12 characters</li>
+                </ul>
             </div>
             <div class="form-group">
                 <input type="submit" class="btn" value="Create Account">
@@ -359,6 +421,18 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     </div>
 
     <script>
+        // Password validation
+        document.getElementById('password').addEventListener('input', function(e) {
+            const password = e.target.value;
+            
+            // Check each requirement
+            document.getElementById('uppercase').classList.toggle('valid', /[A-Z]/.test(password));
+            document.getElementById('lowercase').classList.toggle('valid', /[a-z]/.test(password));
+            document.getElementById('number').classList.toggle('valid', /[0-9]/.test(password));
+            document.getElementById('symbol').classList.toggle('valid', /[!@#$%^&*]/.test(password));
+            document.getElementById('length').classList.toggle('valid', password.length >= 12);
+        });
+
         function toggleMenu() {
             const menu = document.getElementById('accountMenu');
             menu.classList.toggle('active');
