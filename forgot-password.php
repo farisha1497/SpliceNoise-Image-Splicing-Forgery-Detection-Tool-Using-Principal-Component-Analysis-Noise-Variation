@@ -43,22 +43,69 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         
                         if(mysqli_stmt_execute($update_stmt)){
                             // Send reset email
-                            $reset_link = "http://" . $_SERVER['HTTP_HOST'] . "/Exposing-splicing-sensor-noise-master2/reset-password.php?token=" . $reset_token . "&email=" . urlencode($email);
+                            // Get the server protocol and host
+                            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
+                            $host = $_SERVER['HTTP_HOST'];
+                            // Remove any localhost references and use actual domain
+                            $base_url = $protocol . $host;
+                            // Create the reset link with proper domain
+                            $reset_link = $base_url . "/reset-password.php?token=" . $reset_token . "&email=" . urlencode($email);
                             
                             $to = $email;
                             $subject = "Password Reset Request - SpliceNoise";
-                            $message = "We received a request to reset your password for your SpliceNoise account.\n\n";
-                            $message .= "To reset your password, click the link below or copy and paste it into your browser:\n\n";
-                            $message .= $reset_link . "\n\n";
-                            $message .= "For security reasons, this link will expire in 1 hour.\n\n";
-                            $message .= "If you did not request this password reset, please ignore this email and your password will remain unchanged.\n\n";
-                            $message .= "For your security:\n";
-                            $message .= "- Never share your password with anyone\n";
-                            $message .= "- Create a strong, unique password\n";
-                            $message .= "- Enable two-factor authentication if available\n\n";
-                            $message .= "Best regards,\nThe SpliceNoise Team";
+                            
+                            // Create HTML email body
+                            $html_message = '
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: linear-gradient(135deg, #005761, #3B9999); padding: 20px; border-radius: 10px 10px 0 0;">
+                                    <h1 style="color: #ffffff; margin: 0; text-align: center;">SpliceNoise</h1>
+                                </div>
+                                <div style="background: #ffffff; padding: 20px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                    <p style="color: #333333; font-size: 16px; line-height: 1.6;">Hello,</p>
+                                    <p>We received a request to reset your password for your SpliceNoise account.</p>
+                                    <p>To reset your password, click the button below:</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="' . $reset_link . '" style="background: linear-gradient(45deg, #005761, #3B9999); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">Reset Password</a>
+                                    </div>
+                                    
+                                    <p>Or copy and paste this link into your browser:</p>
+                                    <p style="background: #f5f5f5; padding: 10px; border-radius: 5px; word-break: break-all;">' . $reset_link . '</p>
+                                    
+                                    <p><strong>Important:</strong> This link will expire in 1 hour for security reasons.</p>
+                                    
+                                    <p>If you did not request this password reset, please ignore this email and your password will remain unchanged.</p>
+                                    
+                                    <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 5px;">
+                                        <p style="margin: 0; font-weight: bold;">For your security:</p>
+                                        <ul style="margin: 10px 0; padding-left: 20px;">
+                                            <li>Never share your password with anyone</li>
+                                            <li>Create a strong, unique password</li>
+                                            <li>Enable two-factor authentication if available</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <p style="margin-top: 30px;">Best regards,<br>The SpliceNoise Team</p>
+                                    
+                                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666666;">
+                                        <p style="font-size: 12px;">This is an automated message, please do not reply.</p>
+                                    </div>
+                                </div>
+                            </div>';
 
-                            if(sendEmail($to, $subject, $message)){
+                            // Create plain text version
+                            $text_message = "We received a request to reset your password for your SpliceNoise account.\n\n";
+                            $text_message .= "To reset your password, click the link below or copy and paste it into your browser:\n\n";
+                            $text_message .= $reset_link . "\n\n";
+                            $text_message .= "For security reasons, this link will expire in 1 hour.\n\n";
+                            $text_message .= "If you did not request this password reset, please ignore this email and your password will remain unchanged.\n\n";
+                            $text_message .= "For your security:\n";
+                            $text_message .= "- Never share your password with anyone\n";
+                            $text_message .= "- Create a strong, unique password\n";
+                            $text_message .= "- Enable two-factor authentication if available\n\n";
+                            $text_message .= "Best regards,\nThe SpliceNoise Team";
+
+                            if(sendEmail($to, $subject, $text_message, $html_message)){
                                 $success_msg = "Password reset instructions have been sent to your email. Please check your inbox and spam folder.";
                             } else {
                                 $email_err = "Error sending reset email. Please try again later.";

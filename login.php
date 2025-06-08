@@ -239,9 +239,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 109, 119, 0.3);
-            background: linear-gradient(45deg, var(--teal-accent), var(--teal-dark));
+            background: var(--teal-medium);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 87, 97, 0.3);
         }
 
         .btn:active {

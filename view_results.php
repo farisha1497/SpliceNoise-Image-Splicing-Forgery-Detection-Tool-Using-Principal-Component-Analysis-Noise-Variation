@@ -49,6 +49,8 @@ if($stmt = mysqli_prepare($conn, $sql)){
             --teal-bright: #008999;
             --soft-white: #F7FCFD;
             --gray-blue: #657F87;
+            --purple-medium: #b5179e;
+            --pink-accent: #ff006e;
             
             /* Dark Mode Colors */
             --dark-bg: #1A1D2D;
@@ -165,6 +167,23 @@ if($stmt = mysqli_prepare($conn, $sql)){
             padding: 1.2rem;
             max-width: 1100px;
             margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .results-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,
+                var(--teal-accent),
+                var(--purple-medium),
+                var(--pink-accent)
+            );
+            opacity: 0.7;
         }
 
         .user-info {
@@ -343,7 +362,7 @@ if($stmt = mysqli_prepare($conn, $sql)){
                             </p>
                             <p>
                                 <a href="view_result.php?folder=<?php echo urlencode($result['result_folder']); ?>">
-                                    View Detailed Results
+                                    View Detailed Result
                                 </a>
                             </p>
                         </li>

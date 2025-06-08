@@ -39,6 +39,8 @@ $results = json_decode(file_get_contents($results_file), true);
             --teal-bright: #008999;
             --soft-white: #F7FCFD;
             --gray-blue: #657F87;
+            --purple-medium: #b5179e;
+            --pink-accent: #ff006e;
             
             /* Dark Mode Colors */
             --dark-bg: #1A1D2D;
@@ -155,6 +157,23 @@ $results = json_decode(file_get_contents($results_file), true);
             padding: 1.2rem;
             max-width: 1100px;
             margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .results-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,
+                var(--teal-accent),
+                var(--purple-medium),
+                var(--pink-accent)
+            );
+            opacity: 0.7;
         }
 
         .action-buttons {
