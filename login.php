@@ -11,6 +11,7 @@ if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
 require_once "config/database.php";
 require_once "includes/RateLimiter.php";
 require_once "includes/RateLimitDisplay.php";
+require_once "config/recaptcha.php";
 
 $email = $password = "";
 $email_err = $password_err = $login_err = "";
@@ -19,118 +20,126 @@ $email_err = $password_err = $login_err = "";
 $rate_limiter = new RateLimiter($conn, null, isset($_POST["email"]) ? $_POST["email"] : null);
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-    // Check if user is allowed to attempt login
-    if (!$rate_limiter->isAllowed()) {
-        $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
+    // Verify reCAPTCHA first
+    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+    $recaptcha_result = verifyRecaptcha($recaptcha_response);
+    
+    if (!$recaptcha_result['success'] || $recaptcha_result['score'] < RECAPTCHA_SCORE_THRESHOLD) {
+        $login_err = "Invalid request. Please try again.";
     } else {
-        // Validate email
-        if(empty(trim($_POST["email"]))){
-            $email_err = "Please enter email.";
-        } else{
-            $email = trim($_POST["email"]);
-            // Update rate limiter with email
-            $rate_limiter = new RateLimiter($conn, null, $email);
-        }
-        
-        // Validate password
-        if(empty(trim($_POST["password"]))){
-            $password_err = "Please enter your password.";
-        } else{
-            $password = trim($_POST["password"]);
-        }
-        
-        // Validate credentials
-        if(empty($email_err) && empty($password_err)){
-            $sql = "SELECT id, email, password, salt, email_verified FROM users WHERE email = ?";
+        // Check if user is allowed to attempt login
+        if (!$rate_limiter->isAllowed()) {
+            $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
+        } else {
+            // Validate email
+            if(empty(trim($_POST["email"]))){
+                $email_err = "Please enter email.";
+            } else{
+                $email = trim($_POST["email"]);
+                // Update rate limiter with email
+                $rate_limiter = new RateLimiter($conn, null, $email);
+            }
             
-            if($stmt = mysqli_prepare($conn, $sql)){
-                mysqli_stmt_bind_param($stmt, "s", $param_email);
-                $param_email = $email;
+            // Validate password
+            if(empty(trim($_POST["password"]))){
+                $password_err = "Please enter your password.";
+            } else{
+                $password = trim($_POST["password"]);
+            }
+            
+            // Validate credentials
+            if(empty($email_err) && empty($password_err)){
+                $sql = "SELECT id, email, password, salt, email_verified FROM users WHERE email = ?";
                 
-                if(mysqli_stmt_execute($stmt)){
-                    mysqli_stmt_store_result($stmt);
+                if($stmt = mysqli_prepare($conn, $sql)){
+                    mysqli_stmt_bind_param($stmt, "s", $param_email);
+                    $param_email = $email;
                     
-                    if(mysqli_stmt_num_rows($stmt) == 1){
-                        mysqli_stmt_bind_result($stmt, $id, $email, $hashed_password, $salt, $email_verified);
-                        if(mysqli_stmt_fetch($stmt)){
-                            // Create salted password for verification
-                            $salted_password = $password . $salt;
-                            
-                            // Verify password with current hash algorithm
-                            if(password_verify($salted_password, $hashed_password)){
-                                if($email_verified){
-                                    // Log successful attempt
-                                    $rate_limiter->logAttempt(true);
-                                    
-                                    // Check if password needs rehash
-                                    if (password_needs_rehash($hashed_password, PASSWORD_ARGON2ID, [
-                                        'memory_cost' => 65536,
-                                        'time_cost' => 4,
-                                        'threads' => 2
-                                    ])) {
-                                        // Generate new salt and rehash
-                                        $new_salt_bytes = random_bytes(32);
-                                        $new_salt = base64_encode($new_salt_bytes);
-                                        $new_salted_password = $password . $new_salt;
-                                        $new_hash = password_hash($new_salted_password, PASSWORD_ARGON2ID, [
+                    if(mysqli_stmt_execute($stmt)){
+                        mysqli_stmt_store_result($stmt);
+                        
+                        if(mysqli_stmt_num_rows($stmt) == 1){
+                            mysqli_stmt_bind_result($stmt, $id, $email, $hashed_password, $salt, $email_verified);
+                            if(mysqli_stmt_fetch($stmt)){
+                                // Create salted password for verification
+                                $salted_password = $password . $salt;
+                                
+                                // Verify password with current hash algorithm
+                                if(password_verify($salted_password, $hashed_password)){
+                                    if($email_verified){
+                                        // Log successful attempt
+                                        $rate_limiter->logAttempt(true);
+                                        
+                                        // Check if password needs rehash
+                                        if (password_needs_rehash($hashed_password, PASSWORD_ARGON2ID, [
                                             'memory_cost' => 65536,
                                             'time_cost' => 4,
                                             'threads' => 2
-                                        ]);
+                                        ])) {
+                                            // Generate new salt and rehash
+                                            $new_salt_bytes = random_bytes(32);
+                                            $new_salt = base64_encode($new_salt_bytes);
+                                            $new_salted_password = $password . $new_salt;
+                                            $new_hash = password_hash($new_salted_password, PASSWORD_ARGON2ID, [
+                                                'memory_cost' => 65536,
+                                                'time_cost' => 4,
+                                                'threads' => 2
+                                            ]);
+                                            
+                                            // Update password and salt
+                                            $update_sql = "UPDATE users SET password = ?, salt = ? WHERE id = ?";
+                                            if($update_stmt = mysqli_prepare($conn, $update_sql)) {
+                                                mysqli_stmt_bind_param($update_stmt, "ssi", $new_hash, $new_salt, $id);
+                                                mysqli_stmt_execute($update_stmt);
+                                                mysqli_stmt_close($update_stmt);
+                                            }
+                                        }
                                         
-                                        // Update password and salt
-                                        $update_sql = "UPDATE users SET password = ?, salt = ? WHERE id = ?";
-                                        if($update_stmt = mysqli_prepare($conn, $update_sql)) {
-                                            mysqli_stmt_bind_param($update_stmt, "ssi", $new_hash, $new_salt, $id);
-                                            mysqli_stmt_execute($update_stmt);
-                                            mysqli_stmt_close($update_stmt);
+                                        // Start session and set session variables
+                                        session_start();
+                                        $_SESSION["loggedin"] = true;
+                                        $_SESSION["id"] = $id;
+                                        $_SESSION["email"] = $email;
+                                        $_SESSION["last_activity"] = time();
+                                        
+                                        // Check if user is admin and set admin flag
+                                        $sql = "SELECT is_admin FROM users WHERE id = ?";
+                                        if ($admin_stmt = mysqli_prepare($conn, $sql)) {
+                                            mysqli_stmt_bind_param($admin_stmt, "i", $id);
+                                            mysqli_stmt_execute($admin_stmt);
+                                            $admin_result = mysqli_stmt_get_result($admin_stmt);
+                                            if ($admin_row = mysqli_fetch_assoc($admin_result)) {
+                                                $_SESSION["is_admin"] = (bool)$admin_row['is_admin'];
+                                            }
+                                            mysqli_stmt_close($admin_stmt);
                                         }
-                                    }
-                                    
-                                    // Start session and set session variables
-                                    session_start();
-                                    $_SESSION["loggedin"] = true;
-                                    $_SESSION["id"] = $id;
-                                    $_SESSION["email"] = $email;
-                                    $_SESSION["last_activity"] = time();
-                                    
-                                    // Check if user is admin and set admin flag
-                                    $sql = "SELECT is_admin FROM users WHERE id = ?";
-                                    if ($admin_stmt = mysqli_prepare($conn, $sql)) {
-                                        mysqli_stmt_bind_param($admin_stmt, "i", $id);
-                                        mysqli_stmt_execute($admin_stmt);
-                                        $admin_result = mysqli_stmt_get_result($admin_stmt);
-                                        if ($admin_row = mysqli_fetch_assoc($admin_result)) {
-                                            $_SESSION["is_admin"] = (bool)$admin_row['is_admin'];
+                                        
+                                        // Redirect based on user role
+                                        if (isset($_SESSION["is_admin"]) && $_SESSION["is_admin"]) {
+                                            header("location: admin.php");
+                                        } else {
+                                            header("location: upload.php");
                                         }
-                                        mysqli_stmt_close($admin_stmt);
-                                    }
-                                    
-                                    // Redirect based on user role
-                                    if (isset($_SESSION["is_admin"]) && $_SESSION["is_admin"]) {
-                                        header("location: admin.php");
+                                        exit();
                                     } else {
-                                        header("location: upload.php");
+                                        $login_err = "Please verify your email address before logging in. Check your inbox for the verification link.";
                                     }
-                                    exit();
                                 } else {
-                                    $login_err = "Please verify your email address before logging in. Check your inbox for the verification link.";
+                                    // Log failed attempt
+                                    $rate_limiter->logAttempt(false);
+                                    $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
                                 }
-                            } else {
-                                // Log failed attempt
-                                $rate_limiter->logAttempt(false);
-                                $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
                             }
+                        } else {
+                            // Log failed attempt
+                            $rate_limiter->logAttempt(false);
+                            $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
                         }
                     } else {
-                        // Log failed attempt
-                        $rate_limiter->logAttempt(false);
-                        $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
+                        $login_err = "Oops! Something went wrong. Please try again later.";
                     }
-                } else {
-                    $login_err = "Oops! Something went wrong. Please try again later.";
+                    mysqli_stmt_close($stmt);
                 }
-                mysqli_stmt_close($stmt);
             }
         }
     }
@@ -400,6 +409,27 @@ if ($timeout_message) {
             }
         }
     </style>
+    <script src="https://www.google.com/recaptcha/api.js?render=<?php echo RECAPTCHA_SITE_KEY; ?>"></script>
+    <script>
+        function onSubmit(e) {
+            e.preventDefault();
+            grecaptcha.ready(function() {
+                grecaptcha.execute('<?php echo RECAPTCHA_SITE_KEY; ?>', {action: 'login'})
+                .then(function(token) {
+                    // Add the token to the form
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = 'g-recaptcha-response';
+                    tokenInput.value = token;
+                    document.getElementById('loginForm').appendChild(tokenInput);
+                    
+                    // Submit the form
+                    document.getElementById('loginForm').submit();
+                });
+            });
+            return false;
+        }
+    </script>
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
@@ -414,7 +444,7 @@ if ($timeout_message) {
         }        
         ?>
 
-        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+        <form id="loginForm" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" onsubmit="return onSubmit(event)">
             <div class="form-group">
                 <label>Email</label>
                 <input type="email" name="email" value="<?php echo $email; ?>" placeholder="Enter your email">

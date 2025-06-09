@@ -13,6 +13,8 @@ if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
 require_once "config/database.php";
 require_once "config/mail_config.php";
 require_once "includes/RateLimiter.php";
+require_once "includes/EmailVerification.php";
+require_once "config/recaptcha.php";
 
 $email = $password = $confirm_password = "";
 $email_err = $password_err = $confirm_password_err = "";
@@ -20,149 +22,158 @@ $registration_success = false;
 
 // Initialize rate limiter for registration
 $rate_limiter = new RateLimiter($conn, $_SERVER['REMOTE_ADDR']);
+$email_verification = new EmailVerification($conn);
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-    // Check if registration attempts are allowed
-    if (!$rate_limiter->isAllowed()) {
-        $wait_time = $rate_limiter->getWaitTime();
-        $email_err = "Too many registration attempts. Please try again after " . ceil($wait_time / 60) . " minutes.";
+    // Verify reCAPTCHA first
+    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+    $recaptcha_result = verifyRecaptcha($recaptcha_response);
+    
+    if (!$recaptcha_result['success'] || $recaptcha_result['score'] < RECAPTCHA_SCORE_THRESHOLD) {
+        $email_err = "Invalid request. Please try again.";
     } else {
-        // Validate email
-        if(empty(trim($_POST["email"]))){
-            $email_err = "Please enter an email.";
-        } else{
-            $sql = "SELECT id FROM users WHERE email = ?";
-            
-            if($stmt = mysqli_prepare($conn, $sql)){
-                mysqli_stmt_bind_param($stmt, "s", $param_email);
-                $param_email = trim($_POST["email"]);
+        // Check if registration attempts are allowed
+        if (!$rate_limiter->isAllowed()) {
+            $wait_time = $rate_limiter->getWaitTime();
+            $email_err = "Too many registration attempts. Please try again after " . ceil($wait_time / 60) . " minutes.";
+        } else {
+            // Validate email
+            if(empty(trim($_POST["email"]))){
+                $email_err = "Please enter an email.";
+            } else{
+                $sql = "SELECT id FROM users WHERE email = ?";
                 
-                if(mysqli_stmt_execute($stmt)){
-                    mysqli_stmt_store_result($stmt);
+                if($stmt = mysqli_prepare($conn, $sql)){
+                    mysqli_stmt_bind_param($stmt, "s", $param_email);
+                    $param_email = trim($_POST["email"]);
                     
-                    if(mysqli_stmt_num_rows($stmt) == 1){
-                        $email_err = "This email is already taken.";
-                        $rate_limiter->logAttempt(false);
+                    if(mysqli_stmt_execute($stmt)){
+                        mysqli_stmt_store_result($stmt);
+                        
+                        if(mysqli_stmt_num_rows($stmt) == 1){
+                            $email_err = "This email is already taken.";
+                            $rate_limiter->logAttempt(false);
+                        } else{
+                            $email = trim($_POST["email"]);
+                        }
                     } else{
-                        $email = trim($_POST["email"]);
+                        echo "Oops! Something went wrong. Please try again later.";
+                        $rate_limiter->logAttempt(false);
                     }
-                } else{
-                    echo "Oops! Something went wrong. Please try again later.";
-                    $rate_limiter->logAttempt(false);
-                }
 
-                mysqli_stmt_close($stmt);
-            }
-        }
-        
-        // Validate password
-        if(empty(trim($_POST["password"]))){
-            $password_err = "Please enter a password.";     
-        } else {
-            $password = trim($_POST["password"]);
-            $uppercase = preg_match('/[A-Z]/', $password);
-            $lowercase = preg_match('/[a-z]/', $password);
-            $number    = preg_match('/[0-9]/', $password);
-            $symbol    = preg_match('/[!@#$%^&*]/', $password);
-            
-            if(!$uppercase || !$lowercase || !$number || !$symbol || strlen($password) < 12) {
-                $password_err = "Password must contain:";
-                if(!$uppercase) $password_err .= "<br>• At least 1 uppercase letter";
-                if(!$lowercase) $password_err .= "<br>• At least 1 lowercase letter";
-                if(!$number) $password_err .= "<br>• At least 1 number";
-                if(!$symbol) $password_err .= "<br>• At least 1 symbol (!@#$%^&*)";
-                if(strlen($password) < 12) $password_err .= "<br>• At least 12 characters";
-            }
-        }
-        
-        // Validate confirm password
-        if(empty(trim($_POST["confirm_password"]))){
-            $confirm_password_err = "Please confirm password.";     
-        } else{
-            $confirm_password = trim($_POST["confirm_password"]);
-            if(empty($password_err) && ($password != $confirm_password)){
-                $confirm_password_err = "Password did not match.";
-            }
-        }
-        
-        // Check input errors before inserting in database
-        if(empty($email_err) && empty($password_err) && empty($confirm_password_err)){
-            // Generate verification token and secure random salt
-            $verification_token = bin2hex(random_bytes(32));
-            
-            // Generate a cryptographically secure random salt
-            $salt_bytes = random_bytes(32); // 256 bits of entropy
-            $salt = base64_encode($salt_bytes); // More efficient than hex encoding
-            
-            $sql = "INSERT INTO users (email, password, salt, verification_token) VALUES (?, ?, ?, ?)";
-             
-            if($stmt = mysqli_prepare($conn, $sql)){
-                mysqli_stmt_bind_param($stmt, "ssss", $param_email, $param_password, $salt, $verification_token);
-                
-                $param_email = $email;
-                // Create a secure password hash using the random salt
-                $salted_password = $password . $salt;
-                $param_password = password_hash($salted_password, PASSWORD_ARGON2ID, [
-                    'memory_cost' => 65536,  // 64MB in KiB
-                    'time_cost' => 4,        // 4 iterations
-                    'threads' => 2           // 2 parallel threads
-                ]);
-                
-                // For debugging
-                error_log("Registration - Email: " . $param_email);
-                error_log("Generated salt: " . $salt);
-                error_log("Password hash length: " . strlen($param_password));
-                
-                if(mysqli_stmt_execute($stmt)){
-                    // Log successful registration
-                    $rate_limiter->logAttempt(true);
-                    $registration_success = true;
-                    
-                    // Send verification email
-                    $base_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
-                    $verification_link = rtrim($base_url, '/') . "/verify.php?email=" . urlencode($email) . "&token=" . urlencode($verification_token);
-                    
-                    $subject = "Verify Your Email - SpliceNoise";
-                    $text_message = "Welcome to SpliceNoise!\n\n";
-                    $text_message .= "Please click the following link to verify your email address:\n";
-                    $text_message .= $verification_link . "\n\n";
-                    $text_message .= "If you did not create this account, please ignore this email.\n";
-                    
-                    $html_message = '
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <div style="background: linear-gradient(135deg, #005761, #3B9999); padding: 20px; border-radius: 10px 10px 0 0;">
-                            <h1 style="color: #ffffff; margin: 0; text-align: center;">Welcome to SpliceNoise!</h1>
-                        </div>
-                        <div style="background: #ffffff; padding: 20px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                            <p style="color: #333333; font-size: 16px; line-height: 1.6;">Hello,</p>
-                            <p style="color: #333333; font-size: 16px; line-height: 1.6;">Thank you for registering with SpliceNoise. To complete your registration, please verify your email address by clicking the button below:</p>
-                            
-                            <div style="text-align: center; margin: 30px 0;">
-                                <a href="' . $verification_link . '" style="background-color: #005761; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email Address</a>
-                            </div>
-                            
-                            <p style="color: #666666; font-size: 14px;">If the button doesn\'t work, you can also copy and paste this link into your browser:</p>
-                            <p style="color: #666666; font-size: 14px; word-break: break-all;"><a href="' . $verification_link . '">' . $verification_link . '</a></p>
-                            
-                            <p style="color: #666666; font-size: 14px; margin-top: 30px;">If you did not create this account, please ignore this email.</p>
-                        </div>
-                    </div>';
-                    
-                    if(sendEmail($email, $subject, $text_message, $html_message)){
-                        $registration_success = true;
-                    } else {
-                        // If email fails, still allow registration but inform user
-                        $registration_success = true;
-                        $email_err = "Registration successful but verification email could not be sent. Please contact support.";
-                    }
-                } else{
-                    echo "Oops! Something went wrong. Please try again later.";
-                    $rate_limiter->logAttempt(false);
+                    mysqli_stmt_close($stmt);
                 }
             }
-        } else {
-            // Log failed registration attempt
-            $rate_limiter->logAttempt(false);
+            
+            // Validate password
+            if(empty(trim($_POST["password"]))){
+                $password_err = "Please enter a password.";     
+            } else {
+                $password = trim($_POST["password"]);
+                $uppercase = preg_match('/[A-Z]/', $password);
+                $lowercase = preg_match('/[a-z]/', $password);
+                $number    = preg_match('/[0-9]/', $password);
+                $symbol    = preg_match('/[!@#$%^&*]/', $password);
+                
+                if(!$uppercase || !$lowercase || !$number || !$symbol || strlen($password) < 12) {
+                    $password_err = "Password must contain:";
+                    if(!$uppercase) $password_err .= "<br>• At least 1 uppercase letter";
+                    if(!$lowercase) $password_err .= "<br>• At least 1 lowercase letter";
+                    if(!$number) $password_err .= "<br>• At least 1 number";
+                    if(!$symbol) $password_err .= "<br>• At least 1 symbol (!@#$%^&*)";
+                    if(strlen($password) < 12) $password_err .= "<br>• At least 12 characters";
+                }
+            }
+            
+            // Validate confirm password
+            if(empty(trim($_POST["confirm_password"]))){
+                $confirm_password_err = "Please confirm password.";     
+            } else{
+                $confirm_password = trim($_POST["confirm_password"]);
+                if(empty($password_err) && ($password != $confirm_password)){
+                    $confirm_password_err = "Password did not match.";
+                }
+            }
+            
+            // Check input errors before inserting in database
+            if(empty($email_err) && empty($password_err) && empty($confirm_password_err)){
+                // Generate verification token and secure random salt
+                $verification_token = bin2hex(random_bytes(32));
+                
+                // Generate a cryptographically secure random salt
+                $salt_bytes = random_bytes(32); // 256 bits of entropy
+                $salt = base64_encode($salt_bytes); // More efficient than hex encoding
+                
+                $sql = "INSERT INTO users (email, password, salt, verification_token) VALUES (?, ?, ?, ?)";
+                 
+                if($stmt = mysqli_prepare($conn, $sql)){
+                    mysqli_stmt_bind_param($stmt, "ssss", $param_email, $param_password, $salt, $verification_token);
+                    
+                    $param_email = $email;
+                    // Create a secure password hash using the random salt
+                    $salted_password = $password . $salt;
+                    $param_password = password_hash($salted_password, PASSWORD_ARGON2ID, [
+                        'memory_cost' => 65536,  // 64MB in KiB
+                        'time_cost' => 4,        // 4 iterations
+                        'threads' => 2           // 2 parallel threads
+                    ]);
+                    
+                    // For debugging
+                    error_log("Registration - Email: " . $param_email);
+                    error_log("Generated salt: " . $salt);
+                    error_log("Password hash length: " . strlen($param_password));
+                    
+                    if(mysqli_stmt_execute($stmt)){
+                        // Log successful registration
+                        $rate_limiter->logAttempt(true);
+                        $registration_success = true;
+                        
+                        // Send verification email
+                        $base_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+                        $verification_link = rtrim($base_url, '/') . "/verify.php?email=" . urlencode($email) . "&token=" . urlencode($verification_token);
+                        
+                        $subject = "Verify Your Email - SpliceNoise";
+                        $text_message = "Welcome to SpliceNoise!\n\n";
+                        $text_message .= "Please click the following link to verify your email address:\n";
+                        $text_message .= $verification_link . "\n\n";
+                        $text_message .= "If you did not create this account, please ignore this email.\n";
+                        
+                        $html_message = '
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                            <div style="background: linear-gradient(135deg, #005761, #3B9999); padding: 20px; border-radius: 10px 10px 0 0;">
+                                <h1 style="color: #ffffff; margin: 0; text-align: center;">Welcome to SpliceNoise!</h1>
+                            </div>
+                            <div style="background: #ffffff; padding: 20px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                <p style="color: #333333; font-size: 16px; line-height: 1.6;">Hello,</p>
+                                <p style="color: #333333; font-size: 16px; line-height: 1.6;">Thank you for registering with SpliceNoise. To complete your registration, please verify your email address by clicking the button below:</p>
+                                
+                                <div style="text-align: center; margin: 30px 0;">
+                                    <a href="' . $verification_link . '" style="background-color: #005761; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email Address</a>
+                                </div>
+                                
+                                <p style="color: #666666; font-size: 14px;">If the button doesn\'t work, you can also copy and paste this link into your browser:</p>
+                                <p style="color: #666666; font-size: 14px; word-break: break-all;"><a href="' . $verification_link . '">' . $verification_link . '</a></p>
+                                
+                                <p style="color: #666666; font-size: 14px; margin-top: 30px;">If you did not create this account, please ignore this email.</p>
+                            </div>
+                        </div>';
+                        
+                        if(sendEmail($email, $subject, $text_message, $html_message)){
+                            $registration_success = true;
+                        } else {
+                            // If email fails, still allow registration but inform user
+                            $registration_success = true;
+                            $email_err = "Registration successful but verification email could not be sent. Please contact support.";
+                        }
+                    } else{
+                        echo "Oops! Something went wrong. Please try again later.";
+                        $rate_limiter->logAttempt(false);
+                    }
+                }
+            } else {
+                // Log failed registration attempt
+                $rate_limiter->logAttempt(false);
+            }
         }
     }
     
@@ -476,6 +487,27 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             margin: 0;
         }
     </style>
+    <script src="https://www.google.com/recaptcha/api.js?render=<?php echo RECAPTCHA_SITE_KEY; ?>"></script>
+    <script>
+        function onSubmit(e) {
+            e.preventDefault();
+            grecaptcha.ready(function() {
+                grecaptcha.execute('<?php echo RECAPTCHA_SITE_KEY; ?>', {action: 'register'})
+                .then(function(token) {
+                    // Add the token to the form
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = 'g-recaptcha-response';
+                    tokenInput.value = token;
+                    document.getElementById('registerForm').appendChild(tokenInput);
+                    
+                    // Submit the form
+                    document.getElementById('registerForm').submit();
+                });
+            });
+            return false;
+        }
+    </script>
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
@@ -489,7 +521,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         <?php else: ?>
             <h2>Create Account</h2>
             <p style="color: var(--gray-blue); margin-bottom: 2rem; text-align: center; font-size: 0.95rem; font-weight: 600;">Join SpliceNoise to start analyzing images.</p>
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+            <form id="registerForm" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" onsubmit="return onSubmit(event)">
                 <div class="form-group">
                     <label>Email</label>
                     <input type="email" name="email" value="<?php echo $email; ?>" placeholder="Enter your email">

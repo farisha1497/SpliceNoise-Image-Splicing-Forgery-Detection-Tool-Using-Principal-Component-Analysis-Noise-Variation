@@ -429,12 +429,10 @@ $results = json_decode(file_get_contents($results_file), true);
 
             <div class="disclaimer">
                 <h3>About This Tool</h3>
-                <p>> <i>SpliceNoise</i> is based on the research paper "Exposing Image splicing with inconsistent sensor noise levels" (accepted by Multimedia Tools and Applications, 2020).</p>
-                <p>> The implementation focuses on ISO variations in image splicing detection.</p>
-                <p>> The tool employs a noise-based image splicing localization method specifically designed for cases where source images have distinct ISO settings.</p>
-                <p>> For more information, please visit:</p>
-                <p>• Paper: <a href="https://link.springer.com/article/10.1007/s11042-020-09280-z" target="_blank">https://link.springer.com/article/10.1007/s11042-020-09280-z</a></p>
-                <p>• Author: Hui Zeng & Anjie Peng & Xiaodan Lin</p>
+                <p>> SpliceNoise is based on the research paper "Exposing Image splicing with inconsistent sensor noise levels" by Hui Zeng & Anjie Peng & Xiaodan Lin.</p>
+                <p>> The implementation focuses on ISO variations in image splicing detection. The tool employs a noise-based image splicing localization method specifically designed for cases where source images have distinct ISO settings.</p>
+                <p>> For more information on the research paper, please visit <a href="https://link.springer.com/article/10.1007/s11042-020-09280-z" target="_blank">https://link.springer.com/article/10.1007/s11042-020-09280-z.</a></p>
+                
             </div>
         </div>
     </div>
