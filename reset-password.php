@@ -55,15 +55,24 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     
     // Check input errors before updating the database
     if(empty($new_password_err) && empty($confirm_password_err)){
-        // Update password
-        $sql = "UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE email = ?";
+        // Generate new secure random salt
+        $salt_bytes = random_bytes(32); // 256 bits of entropy
+        $new_salt = base64_encode($salt_bytes);
+        
+        // Update password and salt
+        $sql = "UPDATE users SET password = ?, salt = ?, reset_token = NULL, reset_token_expires = NULL WHERE email = ?";
         
         if($stmt = mysqli_prepare($conn, $sql)){
-            // Set parameters
-            $param_password = password_hash($new_password, PASSWORD_DEFAULT);
+            // Set parameters with secure hashing
+            $salted_password = $new_password . $new_salt;
+            $param_password = password_hash($salted_password, PASSWORD_ARGON2ID, [
+                'memory_cost' => 65536,  // 64MB in KiB
+                'time_cost' => 4,        // 4 iterations
+                'threads' => 2           // 2 parallel threads
+            ]);
             $param_email = $_SESSION["reset_email"];
             
-            mysqli_stmt_bind_param($stmt, "ss", $param_password, $param_email);
+            mysqli_stmt_bind_param($stmt, "sss", $param_password, $new_salt, $param_email);
             
             // Attempt to execute
             if(mysqli_stmt_execute($stmt)){

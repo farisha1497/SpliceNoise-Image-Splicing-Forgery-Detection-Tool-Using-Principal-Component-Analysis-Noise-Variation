@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once "includes/session_handler.php";
+CustomSessionHandler::initialize();
 
 // Check if the user is already logged in
 if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
@@ -8,63 +9,121 @@ if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
 }
 
 require_once "config/database.php";
+require_once "includes/RateLimiter.php";
+require_once "includes/RateLimitDisplay.php";
 
 $email = $password = "";
 $email_err = $password_err = $login_err = "";
 
-if($_SERVER["REQUEST_METHOD"] == "POST"){
-    // Validate email
-    if(empty(trim($_POST["email"]))){
-        $email_err = "Please enter email.";
-    } else{
-        $email = trim($_POST["email"]);
-    }
-    
-    // Validate password
-    if(empty(trim($_POST["password"]))){
-        $password_err = "Please enter your password.";
-    } else{
-        $password = trim($_POST["password"]);
-    }
-    
-    // Validate credentials
-    if(empty($email_err) && empty($password_err)){
-        $sql = "SELECT id, email, password FROM users WHERE email = ?";
-        
-        if($stmt = mysqli_prepare($conn, $sql)){
-            mysqli_stmt_bind_param($stmt, "s", $param_email);
-            $param_email = $email;
-            
-            if(mysqli_stmt_execute($stmt)){
-                mysqli_stmt_store_result($stmt);
-                
-                if(mysqli_stmt_num_rows($stmt) == 1){
-                    mysqli_stmt_bind_result($stmt, $id, $email, $hashed_password);
-                    if(mysqli_stmt_fetch($stmt)){
-                        if(password_verify($password, $hashed_password)){
-                            session_start();
-                            
-                            $_SESSION["loggedin"] = true;
-                            $_SESSION["id"] = $id;
-                            $_SESSION["email"] = $email;
-                            
-                            header("location: upload.php");
-                        } else{
-                            $login_err = "Invalid email or password.";
-                        }
-                    }
-                } else{
-                    $login_err = "Invalid email or password.";
-                }
-            } else{
-                echo "Oops! Something went wrong. Please try again later.";
-            }
+// Initialize rate limiter
+$rate_limiter = new RateLimiter($conn, null, isset($_POST["email"]) ? $_POST["email"] : null);
 
-            mysqli_stmt_close($stmt);
+if($_SERVER["REQUEST_METHOD"] == "POST"){
+    // Check if user is allowed to attempt login
+    if (!$rate_limiter->isAllowed()) {
+        $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
+    } else {
+        // Validate email
+        if(empty(trim($_POST["email"]))){
+            $email_err = "Please enter email.";
+        } else{
+            $email = trim($_POST["email"]);
+            // Update rate limiter with email
+            $rate_limiter = new RateLimiter($conn, null, $email);
+        }
+        
+        // Validate password
+        if(empty(trim($_POST["password"]))){
+            $password_err = "Please enter your password.";
+        } else{
+            $password = trim($_POST["password"]);
+        }
+        
+        // Validate credentials
+        if(empty($email_err) && empty($password_err)){
+            $sql = "SELECT id, email, password, salt, email_verified FROM users WHERE email = ?";
+            
+            if($stmt = mysqli_prepare($conn, $sql)){
+                mysqli_stmt_bind_param($stmt, "s", $param_email);
+                $param_email = $email;
+                
+                if(mysqli_stmt_execute($stmt)){
+                    mysqli_stmt_store_result($stmt);
+                    
+                    if(mysqli_stmt_num_rows($stmt) == 1){
+                        mysqli_stmt_bind_result($stmt, $id, $email, $hashed_password, $salt, $email_verified);
+                        if(mysqli_stmt_fetch($stmt)){
+                            // Create salted password for verification
+                            $salted_password = $password . $salt;
+                            
+                            // Verify password with current hash algorithm
+                            if(password_verify($salted_password, $hashed_password)){
+                                if($email_verified){
+                                    // Log successful attempt
+                                    $rate_limiter->logAttempt(true);
+                                    
+                                    // Check if password needs rehash
+                                    if (password_needs_rehash($hashed_password, PASSWORD_ARGON2ID, [
+                                        'memory_cost' => 65536,
+                                        'time_cost' => 4,
+                                        'threads' => 2
+                                    ])) {
+                                        // Generate new salt and rehash
+                                        $new_salt_bytes = random_bytes(32);
+                                        $new_salt = base64_encode($new_salt_bytes);
+                                        $new_salted_password = $password . $new_salt;
+                                        $new_hash = password_hash($new_salted_password, PASSWORD_ARGON2ID, [
+                                            'memory_cost' => 65536,
+                                            'time_cost' => 4,
+                                            'threads' => 2
+                                        ]);
+                                        
+                                        // Update password and salt
+                                        $update_sql = "UPDATE users SET password = ?, salt = ? WHERE id = ?";
+                                        if($update_stmt = mysqli_prepare($conn, $update_sql)) {
+                                            mysqli_stmt_bind_param($update_stmt, "ssi", $new_hash, $new_salt, $id);
+                                            mysqli_stmt_execute($update_stmt);
+                                            mysqli_stmt_close($update_stmt);
+                                        }
+                                    }
+                                    
+                                    // Start session and set session variables
+                                    session_start();
+                                    $_SESSION["loggedin"] = true;
+                                    $_SESSION["id"] = $id;
+                                    $_SESSION["email"] = $email;
+                                    $_SESSION["last_activity"] = time();
+                                    
+                                    header("location: upload.php");
+                                    exit();
+                                } else {
+                                    $login_err = "Please verify your email address before logging in. Check your inbox for the verification link.";
+                                }
+                            } else {
+                                // Log failed attempt
+                                $rate_limiter->logAttempt(false);
+                                $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
+                            }
+                        }
+                    } else {
+                        // Log failed attempt
+                        $rate_limiter->logAttempt(false);
+                        $login_err = RateLimitDisplay::getStatusMessage($rate_limiter);
+                    }
+                } else {
+                    $login_err = "Oops! Something went wrong. Please try again later.";
+                }
+                mysqli_stmt_close($stmt);
+            }
         }
     }
-    
     mysqli_close($conn);
+}
+
+// Get session timeout message if it exists
+$timeout_message = CustomSessionHandler::getTimeoutMessage();
+if ($timeout_message) {
+    $login_err = '<div class="rate-limit-error">' . $timeout_message . '</div>';
 }
 ?>
 
@@ -75,6 +134,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <?php echo RateLimitDisplay::addStyles(); ?>
     <style>
         :root {
             /* Primary Colors - Darker Teal Palette */

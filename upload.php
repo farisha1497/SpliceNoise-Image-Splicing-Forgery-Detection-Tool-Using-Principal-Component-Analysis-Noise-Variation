@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once "includes/session_handler.php";
+CustomSessionHandler::initialize();
 
 // Check if the user is logged in
 if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
@@ -15,6 +16,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="includes/session_timeout.js"></script>
     <style>
         :root {
             /* Primary Colors - Darker Teal Palette */
@@ -293,5 +295,10 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             </div>
         </div>
     </div>
+
+    <script>
+        // Initialize session timeout manager
+        const sessionTimeoutManager = new SessionTimeoutManager(60); // 60 seconds timeout
+    </script>
 </body>
 </html> 
