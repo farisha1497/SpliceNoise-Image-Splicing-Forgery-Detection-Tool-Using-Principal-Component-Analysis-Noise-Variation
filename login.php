@@ -94,7 +94,24 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     $_SESSION["email"] = $email;
                                     $_SESSION["last_activity"] = time();
                                     
-                                    header("location: upload.php");
+                                    // Check if user is admin and set admin flag
+                                    $sql = "SELECT is_admin FROM users WHERE id = ?";
+                                    if ($admin_stmt = mysqli_prepare($conn, $sql)) {
+                                        mysqli_stmt_bind_param($admin_stmt, "i", $id);
+                                        mysqli_stmt_execute($admin_stmt);
+                                        $admin_result = mysqli_stmt_get_result($admin_stmt);
+                                        if ($admin_row = mysqli_fetch_assoc($admin_result)) {
+                                            $_SESSION["is_admin"] = (bool)$admin_row['is_admin'];
+                                        }
+                                        mysqli_stmt_close($admin_stmt);
+                                    }
+                                    
+                                    // Redirect based on user role
+                                    if (isset($_SESSION["is_admin"]) && $_SESSION["is_admin"]) {
+                                        header("location: admin.php");
+                                    } else {
+                                        header("location: upload.php");
+                                    }
                                     exit();
                                 } else {
                                     $login_err = "Please verify your email address before logging in. Check your inbox for the verification link.";
