@@ -15,8 +15,6 @@ class RateLimiter {
     
     public function isAllowed() {
         $this->cleanOldAttempts();
-        
-        // If no email is provided, allow the attempt
         if (!$this->email) {
             return true;
         }
