@@ -1,24 +1,31 @@
-# Exposing-splicing-sensor-noise
-A noise-based image splicing localization method for the case that the source images are with distinct ISO settings
+# SpliceNoise - Image Splicing Forgery Detection Tool Using Principal Component Analysis Noise Variation
 
-Demo for reproducing the result of 
-[1] "Exposing Image splicing with inconsistent sensor noise levels" (accepted by Multimedia Tools and Applications, 2020  https://link.springer.com/article/10.1007/s11042-020-09280-z).  
-Homepage: http://www.escience.cn/people/Zenghui Contact: zengh5@mail2.sysu.edu.cn  
-This work is an improved version of our previous work  
-Zeng H, Zhan Y, Kang X, Lin X (2017), Image splicing localization using PCA-based noise level estimation. Multimedia Tools and Applications, 76(4):4783–4799  
-Run Splice_NL_ISO.m to see the the comparison results. The code has been verified on Matlab 2015a, Windows 10 64bit
+## Overview
+SpliceNoise is a tool that helps detect if parts of an image have been combined from different sources by examining the noise patterns that naturally exist in digital photos.
 
-# typos correction:
-In the caption of Fig. 1 in [1]  
-'... (left) A group of hikers from one ISO800 image is spliced into an ISO200 image.'
-       should be  
-'... (left) A group of hikers from one ISO800 image is spliced into an ISO100 image.'  
+## How to Use SpliceNoise
 
-In the caption of Fig. 5 in [1]  
-'... For display purpose, the noise levels in (a) and (b) are scaled to [0.4, 1.7], and the noise levels in (a) and (b) are scaled to [0.3, 2.3].'
-       should be
-'... For display purpose, the noise levels in (a) and (b) are scaled to [0.4, 1.7], and the noise levels in (c) and (d) are scaled to [0.3, 2.3].'  
-We apologized for our carelessness
+### Web Interface
+1. Create an account or log in to your existing account
+2. Click the "Upload Image" button on the navigation menu
+3. Select your image file (JPG or PNG format recommended)
+4. Wait for the analysis to complete (usually takes about a minute)
+5. View your results - red areas in the image indicate potential splicing
 
-## Disclaimer notice ##
-    We public this code solely for the convenience of researchers to reproduce our idea accurately and rapidly. Hence, it is for academic use only.
+### Best Practices
+- The detection works best when the source images have different ISO settings
+- Use original, uncompressed images for best results
+- JPG or PNG formats are recommended
+- Higher resolution images provide more accurate analysis
+
+## Technical Background
+SpliceNoise is based on the research paper "Exposing Image splicing with inconsistent sensor noise levels" by Hui Zeng, Anjie Peng, and Xiaodan Lin. The tool employs a noise-based image splicing localization method specifically designed for cases where source images have distinct ISO settings.
+
+## Troubleshooting
+- If analysis fails, try using a different image format
+- Ensure the image is not heavily compressed
+- For technical issues, contact support with details about your image and the error encountered
+
+## Further Information
+For more information on the research behind this tool, visit:
+https://link.springer.com/article/10.1007/s11042-020-09280-z
