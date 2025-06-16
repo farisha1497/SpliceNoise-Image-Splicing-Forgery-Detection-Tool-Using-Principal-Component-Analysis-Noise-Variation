@@ -1,0 +1,21 @@
+* [33md96a8f7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m database mysql setup
+* [33md581fab[m dataset
+* [33me47a580[m delete dataset
+* [33m2ecc99f[m ratelimit
+* [33m0bcafa7[m completed recaptcha
+* [33m7fa57b2[m completed admin.php
+* [33m1cae3a1[m security features
+* [33m5050a20[m completed forgot password
+* [33mb4a8b33[m completed guide.php
+* [33m777df58[m forgot password interface
+* [33m30d60c4[m completed index.php
+* [33m533b5a4[m teal blue interface
+* [33m66af4d0[m teal blue + indigo but no guide
+* [33m7c8533d[m set background and header
+* [33m230babb[m add : login and register
+* [33m28ba8d5[m add : dataset
+* [33m5fb27da[m 1 original image + 1 detected image
+* [33mdd75cf1[m delete : no detected image
+* [33m9b843fc[m 1 original image + 1 long detected image
+* [33mdbab7b2[m output : 1 original image but no final image
+* [33md03c8fd[m original + upload,result
