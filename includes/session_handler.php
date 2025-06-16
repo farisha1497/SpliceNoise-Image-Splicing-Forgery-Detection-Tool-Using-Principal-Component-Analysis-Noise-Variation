@@ -1,6 +1,6 @@
 <?php
 class CustomSessionHandler {
-    const SESSION_TIMEOUT = 60; // 1 minute in seconds
+    const SESSION_TIMEOUT = 180; // 3 minute in seconds
     
     public static function initialize() {
         if (session_status() === PHP_SESSION_NONE) {
