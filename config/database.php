@@ -6,7 +6,7 @@ define('DB_NAME', 'defaultdb');
 define('DB_PORT', 25060);
 
 // Attempt to connect to MySQL database
-$conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, '', DB_PORT);
+$conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);
 
 // Check connection
 if($conn === false){
