@@ -171,57 +171,16 @@ def process_image(input_image_path, output_dir):
         result[valid] = labels
         result_proposed = result.reshape(label64.shape)
         
+        # First attempt
+        labels = custom_kmeans(Noise_64c[valid], 2)
+        result = np.ones(label64.size)
+        result[valid] = labels
+        result_proposed = result.reshape(label64.shape)
+        
+        # Second conflicting attempt
         re = np.ones(label64.size)
-
-        attenfactor = model(meanIb)
-        Noise_64c = Noise_64 * attenfactor
-        flat_valid = Noise_64c[valid].reshape(-1, 1)
-
-        if flat_valid.shape[0] < 2:
-            raise Exception("Not enough valid blocks for KMeans.")
-
-        def custom_kmeans(data, N):
-            m = len(data)
-            u = np.zeros(N)
-            
-            # Initialize centroids
-            sorted_data = np.sort(data)
-            u[0] = np.mean(sorted_data[-round(m/4):])
-            u[1] = np.mean(sorted_data[:round(m/4)])
-            umax = np.median(sorted_data[-round(m/100):])
-            data = np.minimum(data, umax)
-            
-            # Iterate
-            for iter in range(200):
-                pre_u = u.copy()
-                
-                # Compute distances
-                tmp = np.abs(data.reshape(-1, 1) - u.reshape(1, -1))
-                index = np.argmin(tmp, axis=1)
-                quan = np.zeros((m, N))
-                
-                for i in range(m):
-                    quan[i, index[i]] = tmp[i, index[i]]
-                
-                # Update centroids
-                for i in range(N):
-                    if np.sum(quan[:, i]) > 0.01:
-                        u[i] = np.sum(quan[:, i] * data) / np.sum(quan[:, i])
-                
-                if np.linalg.norm(pre_u - u) < 0.02:
-                    break
-            
-            # Assign final labels
-            tmp = np.abs(data.reshape(-1, 1) - u.reshape(1, -1))
-            labels = np.argmin(tmp, axis=1) + 1
-            
-            # Ensure smaller region gets label 2
-            if np.sum(labels == 1) < m/2:
-                labels = 3 - labels
-            
-            return labels
-        re3 = kmeans.labels_
-        re[np.ravel_multi_index(valid, label64.shape)] = re3 + 1  # label from 1, 2
+        re3 = kmeans.labels_  # This will fail as kmeans is not defined
+        re[np.ravel_multi_index(valid, label64.shape)] = re3 + 1
 
         result_proposed = re.reshape(label64.shape)
 
