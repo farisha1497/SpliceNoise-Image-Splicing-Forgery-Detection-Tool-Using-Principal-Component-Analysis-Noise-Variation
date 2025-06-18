@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify, session
+from flask import Flask, request, jsonify, session
 import os
 import cv2
 import numpy as np
@@ -115,66 +115,43 @@ def process_image(input_image_path, output_dir):
         result_info = {
             'is_spliced': is_spliced,
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'original_image': 'original.png',
-            'final_result_image': 'final_result.png'
+            'original_image': f"/{output_dir}/original.png",
+            'final_result_image': f"/{output_dir}/final_result.png"
         }
-
-        # Save results to JSON file
-        results_json = os.path.join(output_dir, 'analysis_results.json')
-        with open(results_json, 'w') as f:
-            json.dump(result_info, f)
 
         return result_info
 
     except Exception as e:
-        # Write error to a file
-        error_file = os.path.join(output_dir, 'error.txt')
-        with open(error_file, 'w') as f:
-            f.write(f"Error: {str(e)}\n")
-        raise
+        raise Exception(f"Error processing image: {str(e)}")
 
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload():
-    if request.method == 'POST':
-        try:
-            # Check if the user is logged in
-            if 'loggedin' not in session or not session['loggedin']:
-                return redirect(url_for('login'))
+    try:
+        if 'image' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
 
-            # Handle file upload
-            if 'image' not in request.files:
-                return "No file uploaded", 400
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
 
-            file = request.files['image']
-            if file.filename == '':
-                return "No file selected", 400
+        if file:
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            result_folder = os.path.join(RESULTS_DIR, timestamp)
+            os.makedirs(result_folder, exist_ok=True)
 
-            if file:
-                filename = secure_filename(file.filename)
-                timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-                result_folder = os.path.join(RESULTS_DIR, timestamp)
-                os.makedirs(result_folder, exist_ok=True)
+            # Save uploaded file
+            upload_path = os.path.join(UPLOAD_DIR, filename)
+            file.save(upload_path)
 
-                # Save uploaded file
-                upload_path = os.path.join(UPLOAD_DIR, filename)
-                file.save(upload_path)
+            # Process image
+            result_info = process_image(upload_path, result_folder)
 
-                # Process image
-                result_info = process_image(upload_path, result_folder)
-
-                # Success - render results
-                return jsonify(result_info)
-        except Exception as e:
-            return f"Error processing image: {str(e)}", 500
-
-    return render_template('upload.html')
-
-
-@app.route('/login')
-def login():
-    # Dummy login page for demonstration
-    return render_template('login.html')
+            # Return JSON response with links
+            return jsonify(result_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
