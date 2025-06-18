@@ -32,45 +32,104 @@ from scipy.linalg import svd
 
 
 def PCANoiseLevelEstimator(Ib, patch_size):
-    """
-    Estimate noise level using PCA on image patches.
-    Ib: input block (2D array)
-    patch_size: size of square patches
-    """
-    M, N = Ib.shape
-    num_patches_x = M - patch_size + 1
-    num_patches_y = N - patch_size + 1
-    num_patches = num_patches_x * num_patches_y
+    # Parameters from MATLAB implementation
+    UpperBoundLevel = 0.0005
+    UpperBoundFactor = 3.1
+    M1 = patch_size
+    M2 = patch_size
+    M = M1 * M2
+    EigenValueCount = 7
+    EigenValueDiffThreshold = 49.0
+    LevelStep = 0.05
+    MinLevel = 0.06
+    MaxClippedPixelCount = round(0.1 * M)
 
-    if num_patches <= 0:
-        return 1, 0  # invalid block
+    # Convert block to float
+    Ib = Ib.astype(np.float64)
+    
+    # Compute block info
+    block_info = []
+    for y in range(Ib.shape[0] - M2):
+        for x in range(Ib.shape[1] - M1):
+            block = Ib[y:y+M2, x:x+M1]
+            val_sum = np.sum(block)
+            val_sum2 = np.sum(block**2)
+            clipped = np.sum((block == 0) | (block == 255))
+            
+            if clipped <= MaxClippedPixelCount:
+                var = (val_sum2 - val_sum*val_sum/M) / M
+                block_info.append([var, x, y])
+    
+    if not block_info:
+        return 1, np.var(Ib)
+        
+    block_info = np.array(sorted(block_info, key=lambda x: x[0]))
+    
+    # Find first non-zero variance index
+    nozero_idx = np.where(block_info[:, 0] > 0)[0]
+    if len(nozero_idx) == 0:
+        return 1, np.var(Ib)
+    nozero_idx = nozero_idx[0]
+    
+    # Compute upper bound
+    max_idx = len(block_info) - 1
+    idx = int(min(max(round(UpperBoundLevel * max_idx) + 1, nozero_idx), len(block_info)-1))
+    upper_bound = UpperBoundFactor * block_info[idx, 0]
+    
+    # Compute eigenvalues for different subsets
+    variance = upper_bound
+    prev_variance = 0
+    
+    for _ in range(10):
+        if abs(prev_variance - variance) < 1e-5:
+            break
+        prev_variance = variance
+        
+        # Get subset of blocks
+        subset_idx = int(round(MinLevel * len(block_info)))
+        subset = block_info[:subset_idx]
+        
+        if len(subset) < M:
+            continue
+            
+        # Compute PCA
+        blocks = np.array([Ib[int(y):int(y+M2), int(x):int(x+M1)].flatten() 
+                          for _, x, y in subset])
+        mean_block = np.mean(blocks, axis=0, keepdims=True)
+        blocks -= mean_block
+        cov_matrix = np.cov(blocks.T)
+        eigenvals = np.sort(np.linalg.eigvals(cov_matrix).real)
+        
+        if eigenvals[0] < 1e-5:
+            continue
+            
+        diff = eigenvals[EigenValueCount-1] - eigenvals[0]
+        diff_threshold = EigenValueDiffThreshold * prev_variance / np.sqrt(len(subset))
+        
+        if diff < diff_threshold and eigenvals[0] < upper_bound:
+            variance = eigenvals[0]
+            break
+    
+    if variance < 0:
+        return 1, np.sqrt(np.var(Ib))
+        
+    return 0, np.sqrt(variance)
 
-    patches = np.zeros((patch_size * patch_size, num_patches))
-    idx = 0
-    for i in range(num_patches_x):
-        for j in range(num_patches_y):
-            patch = Ib[i:i + patch_size, j:j + patch_size].flatten()
-            patches[:, idx] = patch
-            idx += 1
-
-    mean_patch = np.mean(patches, axis=1, keepdims=True)
-    patches -= mean_patch
-
-    cov_matrix = np.cov(patches)
-    _, s, _ = svd(cov_matrix)
-    noise_std = np.sqrt(s[-1])
-
-    return 0, noise_std  # 0 indicates valid block
-
-
-def model(meanIb):
-    """
-    Placeholder attenuation factor model.
-    Currently returns ones (no attenuation).
-    Replace with real logic or ML model if available.
-    """
-    return np.ones_like(meanIb)
-
+def model(x):
+    low = 20
+    high = 110
+    C = 2 * low * high**2 / (high-low)**2
+    
+    y = np.zeros_like(x)
+    high_mask = x > low
+    low_mask = x <= low
+    
+    y[high_mask] = (2*high**2 - (x[high_mask]-high)**2) / (2*high**2)
+    y[low_mask] = 1 - x[low_mask]/C
+    
+    y = np.maximum(y, 1/2)  # More conservative setting than paper
+    y = 1/y
+    return y.reshape(x.shape)
 
 def process_image(input_image_path, output_dir):
     try:
@@ -93,17 +152,32 @@ def process_image(input_image_path, output_dir):
         I = I[:(M // B) * B, :(N // B) * B]
         M, N = I.shape
 
+        # Process blocks
         label64 = np.zeros((M // B, N // B))
         Noise_64 = np.zeros_like(label64)
         meanIb = np.zeros_like(label64)
-
+        
         for i in range(M // B):
             for j in range(N // B):
-                Ib = I[i * B:(i + 1) * B, j * B:(j + 1) * B]
-                label64[i, j], Noise_64[i, j] = PCANoiseLevelEstimator(Ib, 5)
-                meanIb[i, j] = np.mean(Ib)
-
-        valid = np.where(label64 == 0)
+                Ib = I[i*B:(i+1)*B, j*B:(j+1)*B]
+                label64[i,j], Noise_64[i,j] = PCANoiseLevelEstimator(Ib, 5)
+                meanIb[i,j] = np.mean(Ib)
+        
+        # Process valid blocks
+        valid = np.where(label64 == 0)[0]
+        if len(valid) == 0:
+            raise Exception("No valid blocks found")
+            
+        # Apply model and clustering
+        attenfactor = model(meanIb)
+        Noise_64c = Noise_64 * attenfactor
+        labels = custom_kmeans(Noise_64c[valid], 2)
+        
+        # Reshape result
+        result = np.ones(label64.size)
+        result[valid] = labels
+        result_proposed = result.reshape(label64.shape)
+        
         re = np.ones(label64.size)
 
         attenfactor = model(meanIb)
@@ -113,7 +187,46 @@ def process_image(input_image_path, output_dir):
         if flat_valid.shape[0] < 2:
             raise Exception("Not enough valid blocks for KMeans.")
 
-        kmeans = KMeans(n_clusters=2, random_state=0, n_init='auto').fit(flat_valid)
+        def custom_kmeans(data, N):
+            m = len(data)
+            u = np.zeros(N)
+            
+            # Initialize centroids
+            sorted_data = np.sort(data)
+            u[0] = np.mean(sorted_data[-round(m/4):])
+            u[1] = np.mean(sorted_data[:round(m/4)])
+            umax = np.median(sorted_data[-round(m/100):])
+            data = np.minimum(data, umax)
+            
+            # Iterate
+            for iter in range(200):
+                pre_u = u.copy()
+                
+                # Compute distances
+                tmp = np.abs(data.reshape(-1, 1) - u.reshape(1, -1))
+                index = np.argmin(tmp, axis=1)
+                quan = np.zeros((m, N))
+                
+                for i in range(m):
+                    quan[i, index[i]] = tmp[i, index[i]]
+                
+                # Update centroids
+                for i in range(N):
+                    if np.sum(quan[:, i]) > 0.01:
+                        u[i] = np.sum(quan[:, i] * data) / np.sum(quan[:, i])
+                
+                if np.linalg.norm(pre_u - u) < 0.02:
+                    break
+            
+            # Assign final labels
+            tmp = np.abs(data.reshape(-1, 1) - u.reshape(1, -1))
+            labels = np.argmin(tmp, axis=1) + 1
+            
+            # Ensure smaller region gets label 2
+            if np.sum(labels == 1) < m/2:
+                labels = 3 - labels
+            
+            return labels
         re3 = kmeans.labels_
         re[np.ravel_multi_index(valid, label64.shape)] = re3 + 1  # label from 1, 2
 
