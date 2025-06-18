@@ -4,9 +4,9 @@ class RateLimiter {
     private $email;
     
     // Rate limit settings
-    const MAX_ATTEMPTS = 5;         // Maximum attempts within timeframe
-    const TIMEFRAME = 300;          // Timeframe in seconds (5 minutes)
-    const LOCKOUT_DURATION = 300;    // Lockout duration in seconds
+    const MAX_ATTEMPTS = 500;         // Maximum attempts within timeframe
+    const TIMEFRAME = 3;          // Timeframe in seconds (5 minutes)
+    const LOCKOUT_DURATION = 3;    // Lockout duration in seconds
     
     public function __construct($conn, $ip_address = null, $email = null) {
         $this->conn = $conn;
