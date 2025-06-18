@@ -9,10 +9,12 @@ from werkzeug.utils import secure_filename
 from flask import make_response
 import logging
 from flask import send_from_directory
+from sklearn.cluster import KMeans
+from scipy.linalg import svd
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
-CORS(app, resources={r"/upload": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/upload": {"origins": ["https://seal-app-kntr3.ondigitalocean.app/"]}}, supports_credentials=True)
 
 # Configuration
 UPLOAD_DIR = 'uploads'
@@ -21,15 +23,6 @@ RESULTS_DIR = 'results'
 # Ensure directories exist
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
-
-import os
-import cv2
-import numpy as np
-import json
-from datetime import datetime
-from sklearn.cluster import KMeans
-from scipy.linalg import svd
-
 
 def PCANoiseLevelEstimator(Ib, patch_size):
     # Parameters from MATLAB implementation

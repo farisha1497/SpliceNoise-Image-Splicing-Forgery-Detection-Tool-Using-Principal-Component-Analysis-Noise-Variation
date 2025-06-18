@@ -7,6 +7,79 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     header("location: login.php");
     exit;
 }
+
+// Define upload settings
+define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10MB max file size
+define('ALLOWED_TYPES', ['image/jpeg', 'image/png', 'image/jpg']);
+$uploadError = '';
+
+// Handle direct PHP upload
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
+    $file = $_FILES["image"];
+    $response = array();
+    
+    // Validate file
+    if ($file["error"] !== UPLOAD_ERR_OK) {
+        $uploadError = "Upload failed with error code: " . $file["error"];
+    } elseif ($file["size"] > MAX_FILE_SIZE) {
+        $uploadError = "File is too large. Maximum size is " . (MAX_FILE_SIZE / 1024 / 1024) . "MB";
+    } elseif (!in_array($file["type"], ALLOWED_TYPES)) {
+        $uploadError = "Invalid file type. Allowed types: JPG, JPEG, PNG";
+    } else {
+        // Create temp directory if it doesn't exist
+        $tempDir = "uploads/temp/";
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+        
+        // Generate unique filename
+        $tempName = uniqid('upload_') . '_' . basename($file["name"]);
+        $tempPath = $tempDir . $tempName;
+        
+        if (move_uploaded_file($file["tmp_name"], $tempPath)) {
+            // File successfully uploaded, now send to Python server
+            $pythonServerUrl = "https://urchin-app-oraka.ondigitalocean.app/upload";
+            
+            $postData = array(
+                'image' => new CURLFile($tempPath, $file["type"], $file["name"])
+            );
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $pythonServerUrl);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if ($httpCode === 200) {
+                $response = json_decode($result, true);
+                // Clean up temp file
+                unlink($tempPath);
+                
+                // Redirect to other.php with results
+                header('Content-Type: application/json');
+                echo json_encode($response);
+                exit;
+            } else {
+                $uploadError = "Failed to process image. Server returned code: " . $httpCode;
+            }
+            
+            curl_close($ch);
+            // Clean up temp file on error
+            unlink($tempPath);
+        } else {
+            $uploadError = "Failed to move uploaded file";
+        }
+    }
+    
+    if (!empty($uploadError)) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $uploadError]);
+        exit;
+    }
+}
 ?>
 
 <!DOCTYPE html>
