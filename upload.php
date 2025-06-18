@@ -287,7 +287,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             </div>
 
             <div class="upload-form">
-                <form action="process.php" method="post" enctype="multipart/form-data">
+                <form action="process_php.php" method="post" enctype="multipart/form-data">
                     <input type="file" name="image" accept="image/*" required>
                     <br>
                     <input type="submit" class="btn" value="Upload and Analyze">
