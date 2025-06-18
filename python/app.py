@@ -6,11 +6,12 @@ import numpy as np
 import json
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from flask import make_response
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
-
-CORS(app, resources={r"/upload": {"origins": "*"}})  # Replace * with specific origin if needed
+CORS(app, resources={r"/upload": {"origins": "*"}}, supports_credentials=True)
 
 # Configuration
 UPLOAD_DIR = 'uploads'
@@ -156,6 +157,13 @@ def upload():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def add_cors_headers(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    return response
+
+app.after_request(add_cors_headers)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
