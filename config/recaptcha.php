@@ -1,7 +1,7 @@
 <?php
 // reCAPTCHA v3 Configuration
-define('RECAPTCHA_SITE_KEY', '6Ld35lorAAAAAMwmRK4fl4o3-PUc_-oLehmX5dw4'); 
-define('RECAPTCHA_SECRET_KEY', '6Ld35lorAAAAAKTTmtxICanFaj7mTFT4L9oVECUY'); 
+define('RECAPTCHA_SITE_KEY', '6Lf4p2QrAAAAANHoToFWaxcKvCVmTw73RJOHXLAS'); 
+define('RECAPTCHA_SECRET_KEY', '6Lf4p2QrAAAAAMfFTn8oRZMxy-sdCBpPWyqU6CZj'); 
 define('RECAPTCHA_SCORE_THRESHOLD', 0.5); // Minimum score to consider human (0.0 to 1.0)
 
 // Function to verify reCAPTCHA response
