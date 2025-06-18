@@ -1,4 +1,13 @@
 <?php
+require_once "includes/session_handler.php";
+CustomSessionHandler::initialize();
+
+// Check if user is logged in
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || !isset($_SESSION["id"])) {
+    header("location: login.php");
+    exit;
+}
+
 require_once "config/database.php";
 
 // Get data passed from upload.php
@@ -6,6 +15,13 @@ $is_spliced = $_POST['is_spliced'] ?? null;
 $timestamp = $_POST['timestamp'] ?? null;
 $original_image = $_POST['original_image'] ?? null;
 $final_result_image = $_POST['final_result_image'] ?? null;
+
+// Validate required parameters
+if ($is_spliced === null || $timestamp === null || $original_image === null || $final_result_image === null) {
+    error_log("Missing required parameters in other.php");
+    header("Location: upload.php");
+    exit;
+}
 
 // Save the received data or perform additional actions
 $results_dir = "results/";
@@ -42,7 +58,8 @@ if ($final_content !== false) {
 if ($original_saved && $final_saved) {
     $sql = "INSERT INTO analysis_results (user_id, result_folder, is_spliced) VALUES (?, ?, ?)";
     if($stmt = mysqli_prepare($conn, $sql)){
-        mysqli_stmt_bind_param($stmt, "isi", $_SESSION["id"], $timestamp, $is_spliced);
+        $user_id = $_SESSION["id"];
+        mysqli_stmt_bind_param($stmt, "isi", $user_id, $timestamp, $is_spliced);
         
         if(!mysqli_stmt_execute($stmt)){
             error_log("Error saving results to database: " . mysqli_error($conn));
