@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, session
+from flask_cors import CORS
 import os
 import cv2
 import numpy as np
@@ -8,6 +9,8 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
+
+CORS(app, resources={r"/upload": {"origins": "*"}})  # Replace * with specific origin if needed
 
 # Configuration
 UPLOAD_DIR = 'uploads'
