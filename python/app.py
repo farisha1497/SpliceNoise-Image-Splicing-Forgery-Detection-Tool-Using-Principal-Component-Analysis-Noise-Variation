@@ -8,6 +8,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import make_response
 import logging
+from flask import send_from_directory
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -197,6 +198,13 @@ def add_cors_headers(response):
     return response
 
 app.after_request(add_cors_headers)
+
+@app.route('/results/<path:filename>')
+def serve_result(filename):
+    try:
+        return send_from_directory(RESULTS_DIR, filename)
+    except Exception as e:
+        return jsonify({"error": f"File not found: {filename}"}), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
