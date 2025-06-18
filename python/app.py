@@ -152,9 +152,9 @@ def process_image(input_image_path, output_dir):
 
         result_info = {
             'is_spliced': bool(is_spliced),
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'original_image': f"/{output_dir}/original.png",
-            'final_result_image': f"/{output_dir}/final_result.png"
+            'timestamp': datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),  # Match process.php format
+            'original_image': f"{output_dir}/original.png",  # Remove leading slash
+            'final_result_image': f"{output_dir}/final_result.png"  # Remove leading slash
         }
 
         return result_info

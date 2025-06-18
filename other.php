@@ -21,6 +21,6 @@ $result_data = [
 file_put_contents($results_dir . "result_{$timestamp}.json", json_encode($result_data));
 
 // Redirect to another page for displaying results
-header("Location: display_results.php?timestamp={$timestamp}");
+header("Location: view_results.php?timestamp={$timestamp}");
 exit;
 ?>
