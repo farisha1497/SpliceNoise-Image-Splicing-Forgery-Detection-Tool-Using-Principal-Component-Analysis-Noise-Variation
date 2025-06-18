@@ -287,18 +287,54 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             </div>
 
             <div class="upload-form">
-                <form action="process_php.php" method="post" enctype="multipart/form-data">
+                <form id="uploadForm" onsubmit="handleFormSubmit(event)">
                     <input type="file" name="image" accept="image/*" required>
                     <br>
                     <input type="submit" class="btn" value="Upload and Analyze">
                 </form>
+                <div id="responseContainer" style="margin-top: 20px;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize session timeout manager
-        const sessionTimeoutManager = new SessionTimeoutManager(60); // 60 seconds timeout
+        async function handleFormSubmit(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch("http://flask-server-address/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Pass the result to other.php
+                    const otherForm = document.createElement("form");
+                    otherForm.method = "POST";
+                    otherForm.action = "other.php";
+
+                    // Append result data as hidden inputs
+                    for (const key in result) {
+                        const input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = key;
+                        input.value = result[key];
+                        otherForm.appendChild(input);
+                    }
+
+                    document.body.appendChild(otherForm);
+                    otherForm.submit(); // Redirect to other.php
+                } else {
+                    alert("Error: Unable to process image");
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
     </script>
 </body>
-</html> 
+</html>
