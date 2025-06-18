@@ -85,7 +85,8 @@ def process_image(input_image_path, output_dir):
         attenfactor = np.ones_like(meanIb)  # Replace with actual model logic
         Noise_64c = Noise_64 * attenfactor
         re3 = np.random.random(valid[0].shape)  # Replace with actual clustering logic
-        re[valid] = re3
+        flat_index = valid[0] * (N // B) + valid[1]
+        re[flat_index] = re3
         result_proposed = re.reshape(Noise_64c.shape)
 
         # Create figure for final result with red highlights
