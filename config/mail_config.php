@@ -1,8 +1,8 @@
 <?php
 // Direct includes for PHPMailer
-require_once __DIR__ . '/../vendor/PHPMailer/src/PHPMailer.php';
-require_once __DIR__ . '/../vendor/PHPMailer/src/SMTP.php';
-require_once __DIR__ . '/../vendor/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/../PHPMailer2/PHPMailer.php';
+require_once __DIR__ . '/../PHPMailer2/SMTP.php';
+require_once __DIR__ . '/../PHPMailer2/Exception.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
