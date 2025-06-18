@@ -171,8 +171,16 @@ def process_image(input_image_path, output_dir):
         result[valid] = labels
         result_proposed = result.reshape(label64.shape)
         
-        # First attempt
+        # Remove duplicate clustering attempts
+        # First valid clustering
         labels = custom_kmeans(Noise_64c[valid], 2)
+        
+        # Remove these conflicting lines:
+        # re = np.ones(label64.size)
+        # re3 = kmeans.labels_  
+        # result_proposed = re.reshape(label64.shape)
+
+        # Keep only one result processing
         result = np.ones(label64.size)
         result[valid] = labels
         result_proposed = result.reshape(label64.shape)
@@ -272,4 +280,25 @@ def serve_result(filename):
         return jsonify({"error": f"File not found: {filename}"}), 404
 
 if __name__ == '__main__':
+    # Ensure proper static file handling
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     app.run(host='0.0.0.0', port=8080, debug=True)
+
+
+def custom_kmeans(data, n_clusters, max_iters=100):
+    # Simple KMeans implementation
+    indices = np.random.choice(len(data), n_clusters, replace=False)
+    centroids = data[indices]
+    
+    for _ in range(max_iters):
+        distances = np.linalg.norm(data[:, None] - centroids, axis=2)
+        labels = np.argmin(distances, axis=1)
+        
+        new_centroids = np.array([data[labels == i].mean(axis=0) for i in range(n_clusters)])
+        
+        if np.all(centroids == new_centroids):
+            break
+            
+        centroids = new_centroids
+    
+    return labels
