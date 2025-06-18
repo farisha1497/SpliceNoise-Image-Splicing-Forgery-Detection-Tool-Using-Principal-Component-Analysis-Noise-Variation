@@ -58,12 +58,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
                 // Clean up temp file
                 unlink($tempPath);
                 
-                // Redirect to other.php with results
-                header('Content-Type: application/json');
-                echo json_encode($response);
+                // Forward the results to other.php via POST
+                echo "<form id='redirectForm' action='other.php' method='POST'>";
+                echo "<input type='hidden' name='is_spliced' value='" . htmlspecialchars($response['is_spliced']) . "'>";
+                echo "<input type='hidden' name='timestamp' value='" . htmlspecialchars($response['timestamp']) . "'>";
+                echo "<input type='hidden' name='original_image' value='" . htmlspecialchars($response['original_image']) . "'>";
+                echo "<input type='hidden' name='final_result_image' value='" . htmlspecialchars($response['final_result_image']) . "'>";
+                echo "</form>";
+                echo "<script>document.getElementById('redirectForm').submit();</script>";
                 exit;
             } else {
                 $uploadError = "Failed to process image. Server returned code: " . $httpCode;
+                // Log the actual response for debugging
+                error_log("Python server response: " . $result);
             }
             
             curl_close($ch);
