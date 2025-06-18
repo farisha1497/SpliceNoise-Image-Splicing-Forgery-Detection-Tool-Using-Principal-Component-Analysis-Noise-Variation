@@ -1,5 +1,20 @@
 {
+    "name": "farisha1497/splicenoise-image-splicing-forgery-detection-tool",
+    "description": "SpliceNoise - Image Splicing Forgery Detection Tool Using Principal Component Analysis (PCA) Noise Variation",
+    "type": "project",
     "require": {
         "phpmailer/phpmailer": "^6.9"
-    }
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "farisha1497"
+        }
+    ],
+    "minimum-stability": "stable",
+    "license": "MIT"
 }
