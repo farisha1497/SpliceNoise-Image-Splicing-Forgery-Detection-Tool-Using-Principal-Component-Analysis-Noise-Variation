@@ -26,11 +26,15 @@ def process_image(input_image_path, output_dir):
         # Read the input image
         original = cv2.imread(input_image_path)
 
+        # Validate the loaded image
+        if original is None:
+            raise Exception("Error: Unable to load image. Check file format and path.")
+
+        if len(original.shape) < 3:
+            raise Exception("Error: Image does not have color channels. Ensure the input is a color image.")
+
         # Convert to grayscale if it's a color image
-        if original.shape[2] > 1:
-            spliced = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-        else:
-            spliced = original
+        spliced = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
         # Save original image directly from input
         original_path = os.path.join(output_dir, 'original.png')
@@ -48,6 +52,10 @@ def process_image(input_image_path, output_dir):
         # Ensure dimensions are multiples of block size
         I = I[:(M // B) * B, :(N // B) * B]
         M, N = I.shape
+
+        # Validate dimensions after processing
+        if len(I.shape) != 2:
+            raise Exception("Error: Processed image is not 2-dimensional. Verify preprocessing steps.")
 
         # Process blocks
         label64 = np.zeros((M // B, N // B))
@@ -127,7 +135,6 @@ def process_image(input_image_path, output_dir):
 
     except Exception as e:
         raise Exception(f"Error processing image: {str(e)}")
-
 
 @app.route('/upload', methods=['POST'])
 def upload():
