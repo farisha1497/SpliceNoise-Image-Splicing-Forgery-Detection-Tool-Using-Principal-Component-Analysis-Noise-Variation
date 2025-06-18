@@ -28,13 +28,21 @@ def process_image(input_image_path, output_dir):
 
         # Validate the loaded image
         if original is None:
-            raise Exception("Error: Unable to load image. Check file format and path.")
+            raise Exception("Error: Unable to load image. Ensure file format is valid and path is correct.")
 
-        if len(original.shape) < 3:
-            raise Exception("Error: Image does not have color channels. Ensure the input is a color image.")
+        # Log original image shape
+        logging.debug(f"Original image shape: {original.shape}")
 
-        # Convert to grayscale if it's a color image
-        spliced = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+        # Check the dimensions of the image
+        if len(original.shape) == 3 and original.shape[2] > 1:
+            spliced = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+        elif len(original.shape) == 2:
+            spliced = original  # Already grayscale
+        else:
+            raise Exception("Error: Unexpected image format. Verify the uploaded image.")
+
+        # Log spliced image shape
+        logging.debug(f"Spliced image shape: {spliced.shape}")
 
         # Save original image directly from input
         original_path = os.path.join(output_dir, 'original.png')
@@ -42,6 +50,10 @@ def process_image(input_image_path, output_dir):
 
         # Get image dimensions and preprocess for analysis
         M, N = spliced.shape
+
+        # Ensure the image is 2-dimensional
+        if len(spliced.shape) != 2:
+            raise Exception("Error: Processed image is not 2-dimensional. Verify preprocessing steps.")
 
         # Convert to double
         I = spliced.astype(float)
@@ -52,10 +64,6 @@ def process_image(input_image_path, output_dir):
         # Ensure dimensions are multiples of block size
         I = I[:(M // B) * B, :(N // B) * B]
         M, N = I.shape
-
-        # Validate dimensions after processing
-        if len(I.shape) != 2:
-            raise Exception("Error: Processed image is not 2-dimensional. Verify preprocessing steps.")
 
         # Process blocks
         label64 = np.zeros((M // B, N // B))
