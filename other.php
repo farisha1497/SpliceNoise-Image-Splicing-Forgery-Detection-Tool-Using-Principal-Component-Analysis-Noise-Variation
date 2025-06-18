@@ -23,13 +23,13 @@ if (!is_dir($result_folder)) {
 $python_server = "https://urchin-app-oraka.ondigitalocean.app";
 
 // Download and save original image
-$original_content = file_get_contents($python_server . $original_image);
+$original_content = file_get_contents($python_server . "/" . ltrim($original_image, "/"));
 if ($original_content !== false) {
     file_put_contents($result_folder . "/original.png", $original_content);
 }
 
 // Download and save final result image
-$final_content = file_get_contents($python_server . $final_result_image);
+$final_content = file_get_contents($python_server . "/" . ltrim($final_result_image, "/"));
 if ($final_content !== false) {
     file_put_contents($result_folder . "/final_result.png", $final_content);
 }
