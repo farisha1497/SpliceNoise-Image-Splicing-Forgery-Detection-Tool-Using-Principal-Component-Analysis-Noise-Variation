@@ -3,7 +3,7 @@
         'name' => 'farisha1497/splicenoise-image-splicing-forgery-detection-tool',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'ad0c16202c5db43235caa26ec3064eae187e4bfb',
+        'reference' => '58cc16ab305c5539ba7d6d8d963d5bf74d3597fd',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'farisha1497/splicenoise-image-splicing-forgery-detection-tool' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'ad0c16202c5db43235caa26ec3064eae187e4bfb',
+            'reference' => '58cc16ab305c5539ba7d6d8d963d5bf74d3597fd',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
