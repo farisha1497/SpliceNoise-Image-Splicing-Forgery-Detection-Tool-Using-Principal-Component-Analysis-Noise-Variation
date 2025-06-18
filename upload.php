@@ -305,7 +305,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             const formData = new FormData(form);
 
             try {
-                const response = await fetch("http://flask-server-address/upload", {
+                const response = await fetch("https://urchin-app-oraka.ondigitalocean.app/upload", {
                     method: "POST",
                     body: formData,
                 });
