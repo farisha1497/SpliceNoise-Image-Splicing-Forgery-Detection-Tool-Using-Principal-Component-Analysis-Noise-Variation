@@ -34,6 +34,10 @@ function analyzeImage($image_path, $result_folder) {
             throw new Exception("Failed to read the input image.");
         }
 
+        // Save the original image to the results folder
+        $original_path = $result_folder . '/original.png';
+        imagepng($original, $original_path);
+
         // Get image dimensions
         $M = imagesy($original);
         $N = imagesx($original);
