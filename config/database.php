@@ -1,7 +1,7 @@
 <?php
-define('DB_SERVER', 'db-mysql-nyc3-23651-do-user-23338540-0.m.db.ondigitalocean.com');
+define('DB_SERVER', 'db-mysql-sgp1-94488-do-user-22415811-0.h.db.ondigitalocean.com');
 define('DB_USERNAME', 'doadmin');
-define('DB_PASSWORD', '');
+define('DB_PASSWORD', 'AVNS_62H5jGTHQbq2C5Ampmm');
 define('DB_NAME', 'defaultdb');
 define('DB_PORT', 25060);
 
