@@ -2,6 +2,7 @@
 class RateLimiter {
     private $conn;
     private $email;
+    private $ip_address;
     
     // Rate limit settings
     const MAX_ATTEMPTS = 500;         // Maximum attempts within timeframe
@@ -11,6 +12,7 @@ class RateLimiter {
     public function __construct($conn, $ip_address = null, $email = null) {
         $this->conn = $conn;
         $this->email = $email;
+        $this->ip_address = $ip_address ?? $_SERVER['REMOTE_ADDR']; // Default to the client's IP address
     }
     
     public function isAllowed() {
@@ -35,9 +37,9 @@ class RateLimiter {
             return;
         }
         
-        $sql = "INSERT INTO login_attempts (email, success) VALUES (?, ?)";
+        $sql = "INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)";
         if ($stmt = mysqli_prepare($this->conn, $sql)) {
-            mysqli_stmt_bind_param($stmt, "si", $this->email, $success);
+            mysqli_stmt_bind_param($stmt, "ssi", $this->email, $this->ip_address, $success);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }
@@ -137,4 +139,5 @@ class RateLimiter {
             mysqli_stmt_close($stmt);
         }
     }
-} 
+}
+?>
