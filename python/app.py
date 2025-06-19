@@ -223,6 +223,7 @@ def upload_file():
             return jsonify({'error': 'No file selected'}), 400
 
         image = Image.open(io.BytesIO(file.read())).convert("L")
+        image = image.resize((256, 256)) 
         image_np = np.array(image, dtype=np.float32)
 
         timestamp = int(time.time())
