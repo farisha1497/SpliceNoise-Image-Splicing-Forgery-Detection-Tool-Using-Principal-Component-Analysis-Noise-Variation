@@ -517,6 +517,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             <div class="success-message">
                 <h3>Registration Successful!</h3>
                 <p>A verification email has been sent to your email address. Please check your inbox and click the verification link to activate your account.</p>
+                <div class="login-link" style="margin-top: 20px;">
+                    <a href="login.php" class="btn">Proceed to Login</a>
+                </div>
             </div>
         <?php else: ?>
             <h2>Create Account</h2>
@@ -585,4 +588,4 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         });
     </script>
 </body>
-</html> 
+</html>
