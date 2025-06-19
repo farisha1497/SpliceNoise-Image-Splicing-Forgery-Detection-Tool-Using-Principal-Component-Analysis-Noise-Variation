@@ -253,6 +253,9 @@ def upload_file():
             'original_image': f"{RESULT_FOLDER}/{current_date_str}/original.png",
             'final_result_image': f"{RESULT_FOLDER}/{current_date_str}/final_result.png"
         })
+    except Exception as e:
+        logger.error(f"Upload error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/results/<filename>')
 def get_result(filename):
