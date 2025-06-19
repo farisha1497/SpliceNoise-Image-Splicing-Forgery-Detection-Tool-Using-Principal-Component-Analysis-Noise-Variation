@@ -222,7 +222,7 @@ def upload_file():
 
         # Convert image
         image = Image.open(io.BytesIO(file.read())).convert("L")
-        image = image.resize((256, 256)) 
+        image = image.resize((1024, 1024)) 
         image_np = np.array(image, dtype=np.float32)
 
         # Create date-based subfolder
