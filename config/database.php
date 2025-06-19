@@ -2,7 +2,7 @@
 define('DB_SERVER', 'db-mysql-sgp1-94488-do-user-22415811-0.h.db.ondigitalocean.com');
 define('DB_USERNAME', 'doadmin');
 define('DB_PASSWORD', 'AVNS_62H5jGTHQbq2C5Ampmm');
-define('DB_NAME', 'defaultdb');
+define('DB_NAME', 'splicing_detection');
 define('DB_PORT', 25060);
 date_default_timezone_set('Asia/Kuala_Lumpur');
 // Attempt to connect to MySQL database
@@ -62,7 +62,7 @@ if (mysqli_num_rows($check_admin) == 0) {
     // Generate salt and hash password for admin
     $salt_bytes = random_bytes(32);
     $salt = base64_encode($salt_bytes);
-    $password = "Admin@SpliceNoise2024"; // Default admin password
+    $password = "Admin@SpliceNoise2025"; // Default admin password
     $salted_password = $password . $salt;
     $hashed_password = password_hash($salted_password, PASSWORD_ARGON2ID, [
         'memory_cost' => 65536,
