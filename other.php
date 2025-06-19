@@ -11,7 +11,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || !isset($_
 require_once "config/database.php";
 
 // Get data passed from upload.php
-$is_spliced = $_POST['is_spliced'] ?? null;
+$is_spliced = filter_var($_POST['is_spliced'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
 $timestamp = $_POST['timestamp'] ?? null;
 $original_image = $_POST['original_image'] ?? null;
 $final_result_image = $_POST['final_result_image'] ?? null;

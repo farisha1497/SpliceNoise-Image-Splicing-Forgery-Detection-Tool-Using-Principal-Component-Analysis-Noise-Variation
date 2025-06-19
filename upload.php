@@ -60,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
                 
                 // Forward the results to other.php via POST
                 echo "<form id='redirectForm' action='other.php' method='POST'>";
-                echo "<input type='hidden' name='is_spliced' value='" . htmlspecialchars($response['is_spliced']) . "'>";
+                echo "<input type='hidden' name='is_spliced' value='" . (!empty($response['is_spliced']) ? '1' : '0') . "'>";
                 echo "<input type='hidden' name='timestamp' value='" . htmlspecialchars($response['timestamp']) . "'>";
                 echo "<input type='hidden' name='original_image' value='" . htmlspecialchars($response['original_image']) . "'>";
                 echo "<input type='hidden' name='final_result_image' value='" . htmlspecialchars($response['final_result_image']) . "'>";
