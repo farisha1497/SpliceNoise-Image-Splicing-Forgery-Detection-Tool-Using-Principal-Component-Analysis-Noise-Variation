@@ -322,6 +322,8 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    print("Request files:", request.files)
+    print("Request form:", request.form)
     """Handle file upload and processing"""
     try:
         if 'file' not in request.files:
