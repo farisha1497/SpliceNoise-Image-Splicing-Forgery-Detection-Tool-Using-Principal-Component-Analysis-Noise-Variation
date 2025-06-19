@@ -390,7 +390,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
             </div>
 
             <div class="upload-form">
-                <form id="uploadForm" onsubmit="handleFormSubmit(event)">
+                <form id="uploadForm" onsubmit="handleFormSubmit(event)" enctype="multipart/form-data" method="POST">
                     <input type="file" name="image" accept="image/*" required>
                     <br>
                     <input type="submit" class="btn" id="uploadBtn" value="Upload and Analyze">
