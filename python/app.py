@@ -326,10 +326,10 @@ def upload_file():
     print("Request form:", request.form)
     """Handle file upload and processing"""
     try:
-        if 'file' not in request.files:
+        if 'image' not in request.files:
             return jsonify({'error': 'No file provided'}), 400
         
-        file = request.files['file']
+        file = request.files['image']
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
         
