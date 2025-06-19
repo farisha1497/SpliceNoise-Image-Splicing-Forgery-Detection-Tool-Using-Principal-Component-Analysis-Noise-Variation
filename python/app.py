@@ -257,7 +257,7 @@ def upload_file():
         logger.error(f"Upload error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/results/<filename>')
+@app.route('/results/<path:filename>')
 def get_result(filename):
     try:
         return send_from_directory(RESULT_FOLDER, filename)
