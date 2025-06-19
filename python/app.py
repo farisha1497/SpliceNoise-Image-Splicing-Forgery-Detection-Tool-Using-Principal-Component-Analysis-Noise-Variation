@@ -130,15 +130,13 @@ def process_image(input_image_path, output_dir):
                     col_end = min((j + 1) * B, N)
 
                     block = result_img[row_start:row_end, col_start:col_end, :]
+                    gray_block = cv2.cvtColor(block, cv2.COLOR_BGR2GRAY)
+                    gray_block_bgr = cv2.cvtColor(gray_block, cv2.COLOR_GRAY2BGR)
+                    result_img[row_start:row_end, col_start:col_end, :] = gray_block_bgr
                     block[:, :, 0] = np.maximum(0, block[:, :, 0] - 50)     # Blue
                     block[:, :, 1] = np.maximum(0, block[:, :, 1] - 50)     # Green
                     block[:, :, 2] = np.minimum(255, block[:, :, 2] + 100)
-                    gray_block = cv2.cvtColor(block, cv2.COLOR_BGR2GRAY)
-                    gray_block_bgr = cv2.cvtColor(gray_block, cv2.COLOR_GRAY2BGR)
-
-                    # Replace block with grayscale version
-                    result_img[row_start:row_end, col_start:col_end, :] = gray_block_bgr
-
+                
                     thickness = 2
                     result_img[row_start:row_start + thickness, col_start:col_end, 0] = 255
                     result_img[row_end - thickness:row_end, col_start:col_end, 0] = 255

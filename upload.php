@@ -370,7 +370,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
                 <form id="uploadForm" onsubmit="handleFormSubmit(event)">
                     <input type="file" name="image" accept="image/*" required>
                     <br>
-                    <input type="submit" class="btn" value="Upload and Analyze">
+                    <input type="submit" class="btn" id="uploadBtn" value="Upload and Analyze">
+                    <div class="spinner" id="loadingSpinner"></div>
                 </form>
                 <div id="responseContainer" style="margin-top: 20px;"></div>
             </div>
@@ -379,10 +380,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
 
     <script>
         async function handleFormSubmit(event) {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault();
 
             const form = event.target;
             const formData = new FormData(form);
+            const uploadBtn = document.getElementById('uploadBtn');
+            const spinner = document.getElementById('loadingSpinner');
+
+            // Disable button and show spinner
+            uploadBtn.disabled = true;
+            spinner.style.display = 'block';
 
             try {
                 const response = await fetch("https://urchin-app-oraka.ondigitalocean.app/upload", {
@@ -392,12 +399,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
 
                 if (response.ok) {
                     const result = await response.json();
-                    // Pass the result to other.php
                     const otherForm = document.createElement("form");
                     otherForm.method = "POST";
                     otherForm.action = "other.php";
 
-                    // Append result data as hidden inputs
                     for (const key in result) {
                         const input = document.createElement("input");
                         input.type = "hidden";
@@ -407,12 +412,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
                     }
 
                     document.body.appendChild(otherForm);
-                    otherForm.submit(); // Redirect to other.php
+                    otherForm.submit();
                 } else {
                     alert("Error: Unable to process image");
+                    // Re-enable button and hide spinner on error
+                    uploadBtn.disabled = false;
+                    spinner.style.display = 'none';
                 }
             } catch (error) {
                 alert(`Error: ${error.message}`);
+                // Re-enable button and hide spinner on error
+                uploadBtn.disabled = false;
+                spinner.style.display = 'none';
             }
         }
     </script>
