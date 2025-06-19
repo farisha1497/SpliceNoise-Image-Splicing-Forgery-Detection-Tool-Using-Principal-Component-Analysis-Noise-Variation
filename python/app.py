@@ -226,7 +226,7 @@ def upload_file():
         image_np = np.array(image, dtype=np.float32)
 
         # Create date-based subfolder
-        current_date_str = datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime('%Y-%m-%d')
+        current_date_str = datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime('%Y-%m-%d_%H-%M-%S')
         result_subfolder = os.path.join(RESULT_FOLDER, current_date_str)
         os.makedirs(result_subfolder, exist_ok=True)
 
