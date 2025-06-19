@@ -119,7 +119,8 @@ def process_image(input_image_path, output_dir):
 
         result_proposed = re.reshape(label64.shape)
 
-        result_img = np.stack([spliced] * 3, axis=-1).astype(np.uint8)
+        # Start from the original color image
+        result_img = original.copy().astype(np.uint8)
 
         for i in range(result_proposed.shape[0]):
             for j in range(result_proposed.shape[1]):
@@ -129,17 +130,22 @@ def process_image(input_image_path, output_dir):
                     col_start = j * B
                     col_end = min((j + 1) * B, N)
 
-                    block = result_img[row_start:row_end, col_start:col_end, :]
-                    block[:, :, 0] = np.maximum(0, block[:, :, 0] - 50)     # Blue
-                    block[:, :, 1] = np.maximum(0, block[:, :, 1] - 50)     # Green
-                    block[:, :, 2] = np.minimum(255, block[:, :, 2] + 100)
-                    result_img[row_start:row_end, col_start:col_end, :] = block
+                    # Extract the color block
+                    color_block = result_img[row_start:row_end, col_start:col_end]
 
+                    # Convert it to grayscale and back to 3 channels
+                    gray_block = cv2.cvtColor(color_block, cv2.COLOR_BGR2GRAY)
+                    gray_block_3ch = cv2.cvtColor(gray_block, cv2.COLOR_GRAY2BGR)
+
+                    # Replace the original block with the grayscale version
+                    result_img[row_start:row_end, col_start:col_end] = gray_block_3ch
+
+                    # Draw red borders (in [0,0,255])
                     thickness = 2
-                    result_img[row_start:row_start + thickness, col_start:col_end, 0] = 255
-                    result_img[row_end - thickness:row_end, col_start:col_end, 0] = 255
-                    result_img[row_start:row_end, col_start:col_start + thickness, 0] = 255
-                    result_img[row_start:row_end, col_end - thickness:col_end, 0] = 255
+                    result_img[row_start:row_start + thickness, col_start:col_end] = [0, 0, 255]
+                    result_img[row_end - thickness:row_end, col_start:col_end] = [0, 0, 255]
+                    result_img[row_start:row_end, col_start:col_start + thickness] = [0, 0, 255]
+                    result_img[row_start:row_end, col_end - thickness:col_end] = [0, 0, 255]
 
                     result_img[row_start:row_start + thickness, col_start:col_end, 1:] = 0
                     result_img[row_end - thickness:row_end, col_start:col_end, 1:] = 0
