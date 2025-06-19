@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 from flask import make_response
 import logging
 from flask import send_from_directory
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -153,7 +154,7 @@ def process_image(input_image_path, output_dir):
 
         result_info = {
             'is_spliced': bool(is_spliced),
-            'timestamp': datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),  # Match process.php format
+            'timestamp': datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime('%Y-%m-%d_%H-%M-%S'), # Match process.php format
             'original_image': f"{output_dir}/original.png",  # Remove leading slash
             'final_result_image': f"{output_dir}/final_result.png"  # Remove leading slash
         }
