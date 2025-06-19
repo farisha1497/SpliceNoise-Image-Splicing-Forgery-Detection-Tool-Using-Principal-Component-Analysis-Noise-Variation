@@ -12,7 +12,7 @@ import json
 import time
 
 app = Flask(__name__)
-CORS(app, resources={r"/upload": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,14 +23,6 @@ UPLOAD_FOLDER = 'uploads'
 RESULT_FOLDER = 'results'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
-
-def add_cors_headers(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-    return response
-
-app.after_request(add_cors_headers)
 
 def clamp(x, a, b):
     """Clamp function equivalent to MATLAB Clamp"""
@@ -393,7 +385,7 @@ def process_image_endpoint():
         
         # Clean up
         os.remove(temp_filepath)
-        
+        response.headers.add("Access-Control-Allow-Origin", "*")
         return jsonify({
             'success': True,
             'result': result
@@ -423,6 +415,14 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
+
+def add_cors_headers(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    return response
+
+app.after_request(add_cors_headers)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
