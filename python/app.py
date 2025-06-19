@@ -11,7 +11,7 @@ import json
 import time
 from sklearn.cluster import KMeans
 from numpy.lib.stride_tricks import as_strided
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -186,7 +186,7 @@ def process_image_function(image_array):
     block_list = blocks.reshape(-1, 8, 8)
 
     # Run block analysis in parallel
-    with ThreadPoolExecutor() as executor:
+    with ProcessPoolExecutor() as executor:
         results = list(executor.map(process_block, block_list))
 
     noise_levels = [r for r in results if r is not None]
@@ -201,11 +201,7 @@ def process_image_function(image_array):
     is_spliced = model_function(noise_levels)
 
     return {
-        'is_spliced': bool(is_spliced),
-        'avg_noise_level': avg_noise,
-        'std_noise_level': std_noise,
-        'total_blocks': len(noise_levels),
-        'noise_levels': noise_levels
+        'is_spliced': bool(is_spliced)
     }
 
 @app.route('/')
@@ -235,9 +231,10 @@ def upload_file():
             json.dump(result, f)
 
         return jsonify({
-            'success': True,
-            'result': result,
-            'message': 'Image processed successfully'
+            'is_spliced': bool(result),
+            'timestamp': datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime('%Y-%m-%d_%H-%M-%S'), # Match process.php format
+            'original_image': f"{RESULT_FOLDER}/original.png",  # Remove leading slash
+            'final_result_image': f"{RESULT_FOLDER}/final_result.png"  # Remove leading slash
         })
     except Exception as e:
         logger.error(f"Upload error: {str(e)}")
