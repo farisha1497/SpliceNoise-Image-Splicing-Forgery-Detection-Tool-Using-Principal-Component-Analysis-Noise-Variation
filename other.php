@@ -1,7 +1,7 @@
 <?php
 require_once "includes/session_handler.php";
 CustomSessionHandler::initialize();
-
+date_default_timezone_set('Asia/Kuala_Lumpur');
 // Check if user is logged in
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || !isset($_SESSION["id"])) {
     header("location: login.php");
