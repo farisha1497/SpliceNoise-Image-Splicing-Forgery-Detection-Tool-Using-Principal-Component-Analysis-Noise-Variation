@@ -4,7 +4,7 @@ define('DB_USERNAME', 'doadmin');
 define('DB_PASSWORD', 'AVNS_62H5jGTHQbq2C5Ampmm');
 define('DB_NAME', 'defaultdb');
 define('DB_PORT', 25060);
-
+date_default_timezone_set('Asia/Kuala_Lumpur');
 // Attempt to connect to MySQL database
 $conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);
 
