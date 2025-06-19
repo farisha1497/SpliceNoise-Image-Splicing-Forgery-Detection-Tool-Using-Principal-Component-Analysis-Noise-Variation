@@ -130,9 +130,9 @@ def process_image(input_image_path, output_dir):
                     col_end = min((j + 1) * B, N)
 
                     block = result_img[row_start:row_end, col_start:col_end, :]
-                    block[:, :, 0] = np.minimum(255, block[:, :, 0] + 100)
-                    block[:, :, 1] = np.maximum(0, block[:, :, 1] - 50)
-                    block[:, :, 2] = np.maximum(0, block[:, :, 2] - 50)
+                    block[:, :, 0] = np.maximum(0, block[:, :, 0] - 50)     # Blue
+                    block[:, :, 1] = np.maximum(0, block[:, :, 1] - 50)     # Green
+                    block[:, :, 2] = np.minimum(255, block[:, :, 2] + 100)
                     result_img[row_start:row_end, col_start:col_end, :] = block
 
                     thickness = 2
