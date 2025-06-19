@@ -9,8 +9,9 @@ import io
 import base64
 import json
 import time
-from scipy.linalg import eig
 from sklearn.cluster import KMeans
+from numpy.lib.stride_tricks import as_strided
+from concurrent.futures import ThreadPoolExecutor
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -43,7 +44,7 @@ def pca_noise_level_estimator(image, bsize):
     
     if len(block_info) == 0:
         label = 1
-        variance = np.var(image)
+        variance = np.var(image.astype(np.float32))
     else:
         block_info = block_info[block_info[:, 0].argsort()]
         sum1, sum2, subset_size = compute_statistics(image, block_info, m1, m2, m, level_step, min_level)
@@ -69,18 +70,25 @@ def pca_noise_level_estimator(image, bsize):
     
     return label, np.sqrt(variance) if variance >= 0 else np.sqrt(np.var(image))
 
+def extract_blocks(img, block_size=8, step=4):
+    h, w = img.shape
+    shape = ((h - block_size) // step + 1, (w - block_size) // step + 1, block_size, block_size)
+    strides = (img.strides[0] * step, img.strides[1] * step, img.strides[0], img.strides[1])
+    return as_strided(img, shape=shape, strides=strides)
+
+
 def compute_block_info(image, m1, m2, m, max_clipped_pixel_count):
     height, width = image.shape
     block_info = []
 
     for y in range(height - m2 + 1):
         for x in range(width - m1 + 1):
-            block = image[y:y + m2, x:x + m1]
+            block = image[y:y + m2, x:x + m1].astype(np.float32)
             clipped = np.logical_or(block == 0, block == 255)
             if np.count_nonzero(clipped) <= max_clipped_pixel_count:
                 variance = np.var(block)
                 block_info.append([variance, x, y])
-    
+
     return np.array(block_info) if block_info else np.array([])
 
 def compute_statistics(image, block_info, m1, m2, m, level_step, min_level):
@@ -92,12 +100,12 @@ def compute_statistics(image, block_info, m1, m2, m, level_step, min_level):
         beg_index = clamp(round(q * max_index), 0, max_index)
         end_index = clamp(round(p * max_index), 0, max_index)
         
-        curr_sum1 = np.zeros(m)
-        curr_sum2 = np.zeros((m, m))
+        curr_sum1 = np.zeros(m, dtype=np.float32)
+        curr_sum2 = np.zeros((m, m), dtype=np.float32)
         
         for k in range(beg_index, end_index):
             x, y = int(block_info[k, 1]), int(block_info[k, 2])
-            block = image[y:y + m2, x:x + m1].flatten()
+            block = image[y:y + m2, x:x + m1].flatten().astype(np.float32)
             curr_sum1 += block
             curr_sum2 += np.outer(block, block)
         
@@ -123,13 +131,13 @@ def compute_upper_bound(block_info, upper_bound_level, upper_bound_factor):
 def apply_pca(sum1, sum2, subset_size):
     if subset_size == 0:
         return np.array([0])
-    
-    mean = sum1 / subset_size
-    cov = sum2 / subset_size - np.outer(mean, mean)
+    mean = (sum1 / subset_size).astype(np.float32)
+    cov = (sum2 / subset_size).astype(np.float32) - np.outer(mean, mean)
     try:
-        eigenvalues = np.real(eig(cov)[0])
+        # Use faster symmetric eigenvalue computation
+        eigenvalues = np.linalg.eigvalsh(cov)
         return np.sort(eigenvalues)
-    except:
+    except Exception:
         return np.array([0])
 
 def get_next_estimate(sum1_list, sum2_list, subset_size, prev_estimate, upper_bound, 
@@ -146,7 +154,7 @@ def get_next_estimate(sum1_list, sum2_list, subset_size, prev_estimate, upper_bo
     return eigenvalues[0]
 
 def dethighlight_hz(image):
-    img = image.astype(np.float64)
+    img = image.astype(np.float32)
     blurred = cv2.GaussianBlur(img, (5, 5), 1.0)
     diff = img - blurred
     mask = np.abs(diff) > 10.0
@@ -165,19 +173,15 @@ def model_function(noise_levels):
     except:
         return 0
 
+def process_block(block):
+    try:
+        label, variance = pca_noise_level_estimator(block, block.shape[0])
+        return variance if label == 0 else None
+    except Exception:
+        return None
+
 def process_image_function(image_array):
     processed = dethighlight_hz(image_array)
-    block_size = 8
-    step_size = 4
-    height, width = processed.shape
-
-    noise_levels = []
-    for y in range(0, height - block_size + 1, step_size):
-        for x in range(0, width - block_size + 1, step_size):
-            block = processed[y:y + block_size, x:x + block_size]
-            label, variance = pca_noise_level_estimator(block, block_size)
-            if label == 0:
-                noise_levels.append(variance)
 
     if noise_levels:
         noise_levels_np = np.array(noise_levels)
