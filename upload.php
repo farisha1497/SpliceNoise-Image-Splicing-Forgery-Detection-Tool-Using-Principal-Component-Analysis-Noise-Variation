@@ -351,19 +351,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
         }
 
         .spinner {
-            display: none;
-            margin: 1rem auto;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--teal-dark);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-        }
+                display: none;
+                width: 40px;
+                height: 40px;
+                margin: 20px auto;
+                border: 4px solid var(--teal-light);
+                border-top: 4px solid var(--teal-dark);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
+           0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
         }
 
     </style>
