@@ -360,41 +360,6 @@ def upload_file():
         logger.error(f"Upload error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/process', methods=['POST'])
-def process_image_endpoint():
-    """Process image from base64 data"""
-    try:
-        data = request.get_json()
-        if not data or 'image' not in data:
-            return jsonify({'error': 'No image data provided'}), 400
-        
-        # Decode base64 image
-        image_data = base64.b64decode(data['image'])
-        image = Image.open(io.BytesIO(image_data))
-        
-        # Convert to grayscale and save temporarily
-        if image.mode != 'L':
-            image = image.convert('L')
-        
-        temp_filename = f"temp_{int(time.time())}.png"
-        temp_filepath = os.path.join(UPLOAD_FOLDER, temp_filename)
-        image.save(temp_filepath)
-        
-        # Process the image
-        result = process_image_function(temp_filepath)
-        
-        # Clean up
-        os.remove(temp_filepath)
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        return jsonify({
-            'success': True,
-            'result': result
-        })
-    
-    except Exception as e:
-        logger.error(f"Process error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/health')
 def health_check():
     """Health check endpoint"""
