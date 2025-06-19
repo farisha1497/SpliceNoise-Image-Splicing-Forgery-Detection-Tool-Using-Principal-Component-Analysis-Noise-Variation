@@ -1,28 +1,28 @@
 <?php return array(
     'root' => array(
-        'name' => '__root__',
+        'name' => 'farisha1497/splicenoise-image-splicing-forgery-detection-tool',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '5050a20a32fe3076efae1d1b9c7834c23bf131f3',
-        'type' => 'library',
+        'reference' => '58cc16ab305c5539ba7d6d8d963d5bf74d3597fd',
+        'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        '__root__' => array(
+        'farisha1497/splicenoise-image-splicing-forgery-detection-tool' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '5050a20a32fe3076efae1d1b9c7834c23bf131f3',
-            'type' => 'library',
+            'reference' => '58cc16ab305c5539ba7d6d8d963d5bf74d3597fd',
+            'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
         'phpmailer/phpmailer' => array(
-            'pretty_version' => 'v6.9.1',
-            'version' => '6.9.1.0',
-            'reference' => '039de174cd9c17a8389754d3b877a2ed22743e18',
+            'pretty_version' => 'v6.10.0',
+            'version' => '6.10.0.0',
+            'reference' => 'bf74d75a1fde6beaa34a0ddae2ec5fce0f72a144',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpmailer/phpmailer',
             'aliases' => array(),
