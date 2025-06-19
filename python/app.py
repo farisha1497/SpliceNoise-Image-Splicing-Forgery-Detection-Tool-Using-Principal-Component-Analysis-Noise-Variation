@@ -12,6 +12,8 @@ import time
 from sklearn.cluster import KMeans
 from numpy.lib.stride_tricks import as_strided
 from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -218,27 +220,39 @@ def upload_file():
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
 
+        # Convert image
         image = Image.open(io.BytesIO(file.read())).convert("L")
         image = image.resize((256, 256)) 
         image_np = np.array(image, dtype=np.float32)
 
-        timestamp = int(time.time())
+        # Create date-based subfolder
+        current_date_str = datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime('%Y-%m-%d')
+        result_subfolder = os.path.join(RESULT_FOLDER, current_date_str)
+        os.makedirs(result_subfolder, exist_ok=True)
+
+        # Process image
         result = process_image_function(image_np)
 
+        # Save result JSON
+        timestamp = int(time.time())
         result_filename = f"result_{timestamp}.json"
-        result_path = os.path.join(RESULT_FOLDER, result_filename)
+        result_path = os.path.join(result_subfolder, result_filename)
         with open(result_path, 'w') as f:
             json.dump(result, f)
 
+        # Save images
+        original_img_path = os.path.join(result_subfolder, "original.png")
+        final_result_img_path = os.path.join(result_subfolder, "final_result.png")
+        Image.fromarray(image_np.astype(np.uint8)).save(original_img_path)
+        # For demo, you could reuse same image as final_result.png
+        Image.fromarray(image_np.astype(np.uint8)).save(final_result_img_path)
+
         return jsonify({
-            'is_spliced': bool(result),
-            'timestamp': datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime('%Y-%m-%d_%H-%M-%S'), # Match process.php format
-            'original_image': f"{RESULT_FOLDER}/original.png",  # Remove leading slash
-            'final_result_image': f"{RESULT_FOLDER}/final_result.png"  # Remove leading slash
+            'is_spliced': bool(result.get('is_spliced', False)),
+            'timestamp': datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime('%Y-%m-%d_%H-%M-%S'),
+            'original_image': f"{RESULT_FOLDER}/{current_date_str}/original.png",
+            'final_result_image': f"{RESULT_FOLDER}/{current_date_str}/final_result.png"
         })
-    except Exception as e:
-        logger.error(f"Upload error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/results/<filename>')
 def get_result(filename):
