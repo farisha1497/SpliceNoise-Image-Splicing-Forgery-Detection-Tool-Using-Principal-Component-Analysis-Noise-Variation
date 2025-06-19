@@ -7,6 +7,86 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     header("location: login.php");
     exit;
 }
+
+// Define upload settings
+define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10MB max file size
+define('ALLOWED_TYPES', ['image/jpeg', 'image/png', 'image/jpg']);
+$uploadError = '';
+
+// Handle direct PHP upload
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
+    $file = $_FILES["image"];
+    $response = array();
+    
+    // Validate file
+    if ($file["error"] !== UPLOAD_ERR_OK) {
+        $uploadError = "Upload failed with error code: " . $file["error"];
+    } elseif ($file["size"] > MAX_FILE_SIZE) {
+        $uploadError = "File is too large. Maximum size is " . (MAX_FILE_SIZE / 1024 / 1024) . "MB";
+    } elseif (!in_array($file["type"], ALLOWED_TYPES)) {
+        $uploadError = "Invalid file type. Allowed types: JPG, JPEG, PNG";
+    } else {
+        // Create temp directory if it doesn't exist
+        $tempDir = "uploads/temp/";
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+        
+        // Generate unique filename
+        $tempName = uniqid('upload_') . '_' . basename($file["name"]);
+        $tempPath = $tempDir . $tempName;
+        
+        if (move_uploaded_file($file["tmp_name"], $tempPath)) {
+            // File successfully uploaded, now send to Python server
+            $pythonServerUrl = "https://urchin-app-oraka.ondigitalocean.app/upload";
+            
+            $postData = array(
+                'image' => new CURLFile($tempPath, $file["type"], $file["name"])
+            );
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $pythonServerUrl);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if ($httpCode === 200) {
+                $response = json_decode($result, true);
+                // Clean up temp file
+                unlink($tempPath);
+                
+                // Forward the results to other.php via POST
+                echo "<form id='redirectForm' action='other.php' method='POST'>";
+                echo "<input type='hidden' name='is_spliced' value='" . (!empty($response['is_spliced']) ? '1' : '0') . "'>";
+                echo "<input type='hidden' name='timestamp' value='" . htmlspecialchars($response['timestamp']) . "'>";
+                echo "<input type='hidden' name='original_image' value='" . htmlspecialchars($response['original_image']) . "'>";
+                echo "<input type='hidden' name='final_result_image' value='" . htmlspecialchars($response['final_result_image']) . "'>";
+                echo "</form>";
+                echo "<script>document.getElementById('redirectForm').submit();</script>";
+                exit;
+            } else {
+                $uploadError = "Failed to process image. Server returned code: " . $httpCode;
+                // Log the actual response for debugging
+                error_log("Python server response: " . $result);
+            }
+            
+            curl_close($ch);
+            // Clean up temp file on error
+            unlink($tempPath);
+        } else {
+            $uploadError = "Failed to move uploaded file";
+        }
+    }
+    
+    if (!empty($uploadError)) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $uploadError]);
+        exit;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -269,6 +349,29 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             background: var(--teal-dark);
             color: var(--white);
         }
+
+        .spinner {
+                display: none;
+                width: 40px;
+                height: 40px;
+                margin: 20px auto;
+                border: 4px solid var(--teal-light);
+                border-top: 4px solid var(--teal-dark);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+        @keyframes spin {
+           0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
     </style>
 </head>
 <body>
@@ -287,18 +390,65 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
             </div>
 
             <div class="upload-form">
-                <form action="process.php" method="post" enctype="multipart/form-data">
+                <form id="uploadForm" onsubmit="handleFormSubmit(event)" enctype="multipart/form-data" method="POST">
                     <input type="file" name="image" accept="image/*" required>
                     <br>
-                    <input type="submit" class="btn" value="Upload and Analyze">
+                    <input type="submit" class="btn" id="uploadBtn" value="Upload and Analyze">
+                    <div class="spinner" id="loadingSpinner"></div>
                 </form>
+                <div id="responseContainer" style="margin-top: 20px;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize session timeout manager
-        const sessionTimeoutManager = new SessionTimeoutManager(60); // 60 seconds timeout
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const uploadBtn = document.getElementById('uploadBtn');
+            const spinner = document.getElementById('loadingSpinner');
+
+            // Disable button and show spinner
+            uploadBtn.disabled = true;
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch("https://urchin-app-oraka.ondigitalocean.app/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const otherForm = document.createElement("form");
+                    otherForm.method = "POST";
+                    otherForm.action = "other.php";
+
+                    for (const key in result) {
+                        const input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = key;
+                        input.value = result[key];
+                        otherForm.appendChild(input);
+                    }
+
+                    document.body.appendChild(otherForm);
+                    otherForm.submit();
+                } else {
+                    alert("Error: Unable to process image");
+                    // Re-enable button and hide spinner on error
+                    uploadBtn.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                // Re-enable button and hide spinner on error
+                uploadBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
     </script>
 </body>
-</html> 
+</html>
