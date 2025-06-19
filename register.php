@@ -125,7 +125,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     
                     if(mysqli_stmt_execute($stmt)){
                         // Log successful registration
-                        $rate_limiter->logAttempt(false);
+                        $rate_limiter->logAttempt(true);
                         $registration_success = true;
                         
                         // Send verification email

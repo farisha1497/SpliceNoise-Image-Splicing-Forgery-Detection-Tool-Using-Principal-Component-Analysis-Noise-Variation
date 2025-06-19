@@ -35,9 +35,10 @@ class RateLimiter {
             return;
         }
 
-        $sql = "INSERT INTO login_attempts (email, success) VALUES (?, ?)";
+        $sql = "INSERT INTO login_attempts (email, success, ip_address) VALUES (?, ?, ?)";
         if ($stmt = mysqli_prepare($this->conn, $sql)) {
-            mysqli_stmt_bind_param($stmt, "si", $this->email, $success);
+            $ip_address = $_SERVER['REMOTE_ADDR'];
+            mysqli_stmt_bind_param($stmt, "sis", $this->email, $success, $ip_address);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }
