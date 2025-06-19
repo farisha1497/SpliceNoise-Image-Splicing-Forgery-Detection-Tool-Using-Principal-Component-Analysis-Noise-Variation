@@ -72,7 +72,7 @@ def pca_noise_level_estimator(image, bsize):
     
     return label, np.sqrt(variance) if variance >= 0 else np.sqrt(np.var(image))
 
-def extract_blocks(img, block_size=8, step=4):
+def extract_blocks(img, block_size=64, step=64):  # Change to match MATLAB
     h, w = img.shape
     shape = ((h - block_size) // step + 1, (w - block_size) // step + 1, block_size, block_size)
     strides = (img.strides[0] * step, img.strides[1] * step, img.strides[0], img.strides[1])
@@ -168,9 +168,24 @@ def model_function(noise_levels):
         return 0
     try:
         noise_levels_np = np.array(noise_levels).reshape(-1, 1)
-        kmeans = KMeans(n_clusters=2, random_state=42).fit(noise_levels_np)
+        # Sort and initialize centroids like MATLAB
+        sorted_noise = np.sort(noise_levels_np.flatten())
+        m = len(sorted_noise)
+        initial_centroids = np.array([
+            np.mean(sorted_noise[-m//4:]),  # Upper quarter mean
+            np.mean(sorted_noise[:m//4])     # Lower quarter mean
+        ]).reshape(-1, 1)
+        
+        kmeans = KMeans(n_clusters=2, init=initial_centroids, n_init=1)
+        kmeans.fit(noise_levels_np)
         centroids = kmeans.cluster_centers_.flatten()
         separation = abs(centroids[0] - centroids[1])
+        
+        # Ensure smaller region is labeled as spliced
+        labels = kmeans.labels_
+        if np.sum(labels == 0) > len(labels)/2:
+            labels = 1 - labels
+            
         return int(separation > 0.1)
     except:
         return 0
@@ -183,8 +198,15 @@ def process_block(block):
         return None
 
 def process_image_function(image_array):
+    # Ensure dimensions are multiples of block size
+    B = 64  # Match MATLAB block size
+    h, w = image_array.shape
+    new_h = (h // B) * B
+    new_w = (w // B) * B
+    image_array = image_array[:new_h, :new_w]
+    
     processed = dethighlight_hz(image_array)
-    blocks = extract_blocks(processed, block_size=8, step=4)
+    blocks = extract_blocks(processed, block_size=B, step=B)
     block_list = blocks.reshape(-1, 8, 8)
 
     # Run block analysis in parallel
