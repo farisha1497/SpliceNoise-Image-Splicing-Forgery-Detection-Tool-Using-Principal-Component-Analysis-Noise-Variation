@@ -182,9 +182,17 @@ def process_block(block):
 
 def process_image_function(image_array):
     processed = dethighlight_hz(image_array)
+    blocks = extract_blocks(processed, block_size=8, step=4)
+    block_list = blocks.reshape(-1, 8, 8)
+
+    # Run block analysis in parallel
+    with ThreadPoolExecutor() as executor:
+        results = list(executor.map(process_block, block_list))
+
+    noise_levels = [r for r in results if r is not None]
 
     if noise_levels:
-        noise_levels_np = np.array(noise_levels)
+        noise_levels_np = np.array(noise_levels, dtype=np.float32)
         avg_noise = float(noise_levels_np.mean())
         std_noise = float(noise_levels_np.std())
     else:
@@ -215,7 +223,7 @@ def upload_file():
             return jsonify({'error': 'No file selected'}), 400
 
         image = Image.open(io.BytesIO(file.read())).convert("L")
-        image_np = np.array(image)
+        image_np = np.array(image, dtype=np.float32)
 
         timestamp = int(time.time())
         result = process_image_function(image_np)
