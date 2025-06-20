@@ -36,7 +36,7 @@ if (!is_dir($result_folder)) {
 }
 
 // Copy the images from Python server to local folder
-$python_server = "https://urchin-app-oraka.ondigitalocean.app";
+$python_server = "https://stingray-app-tzszp.ondigitalocean.app";
 
 // Variables to track file save status
 $original_saved = false;

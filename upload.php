@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
         
         if (move_uploaded_file($file["tmp_name"], $tempPath)) {
             // File successfully uploaded, now send to Python server
-            $pythonServerUrl = "https://urchin-app-oraka.ondigitalocean.app/upload";
+            $pythonServerUrl = "https://stingray-app-tzszp.ondigitalocean.app/upload";
             
             $postData = array(
                 'image' => new CURLFile($tempPath, $file["type"], $file["name"])
@@ -415,7 +415,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["image"])) {
             spinner.style.display = 'block';
 
             try {
-                const response = await fetch("https://urchin-app-oraka.ondigitalocean.app/upload", {
+                const response = await fetch("https://stingray-app-tzszp.ondigitalocean.app/upload", {
                     method: "POST",
                     body: formData,
                 });
