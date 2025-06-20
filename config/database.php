@@ -1,5 +1,5 @@
 <?php
-define('DB_SERVER', 'http://db-mysql-sgp1-19615-do-user-23338540-0.j.db.ondigitalocean.com');
+define('DB_SERVER', 'db-mysql-sgp1-19615-do-user-23338540-0.j.db.ondigitalocean.com');
 define('DB_USERNAME', 'doadmin');
 define('DB_PASSWORD', 'AVNS_TzV77Kv8IsYeNTpZ4oa');
 define('DB_NAME', 'defaultdb');
