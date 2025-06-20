@@ -1,7 +1,7 @@
 <?php
-define('DB_SERVER', 'db-mysql-nyc3-23651-do-user-23338540-0.m.db.ondigitalocean.com');
+define('DB_SERVER', 'http://db-mysql-sgp1-19615-do-user-23338540-0.j.db.ondigitalocean.com');
 define('DB_USERNAME', 'doadmin');
-define('DB_PASSWORD', 'AVNS_aHkIMA81O84mnTjOTCg');
+define('DB_PASSWORD', 'AVNS_TzV77Kv8IsYeNTpZ4oa');
 define('DB_NAME', 'defaultdb');
 define('DB_PORT', 25060);
 date_default_timezone_set('Asia/Kuala_Lumpur');
