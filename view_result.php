@@ -404,7 +404,7 @@ $results = json_decode(file_get_contents($results_file), true);
                 <h3>Analysis Conclusion</h3>
                 <p>
                     <?php if ($results['is_spliced']): ?>
-                        This image appears to be spliced. Suspicious regions have been highlighted in red.
+                        This image appears to be spliced. Suspicious regions have been highlighted.
                     <?php else: ?>
                         No evidence of splicing was detected in this image.
                     <?php endif; ?>
