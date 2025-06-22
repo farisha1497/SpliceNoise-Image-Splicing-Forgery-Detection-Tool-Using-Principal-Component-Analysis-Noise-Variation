@@ -2,7 +2,7 @@
 // Database credentials
 $host = 'db-mysql-sgp1-19615-do-user-23338540-0.j.db.ondigitalocean.com';
 $username = 'doadmin';
-$password = 'AVNS_TzV77Kv8IsYeNTpZ4oa';
+$password = 'AVNS_wO2qHxKdeeUPd0I3Q07';
 $database = 'defaultdb';
 $port = 25060;
 
